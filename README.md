@@ -1,2 +1,2 @@
-# FinHelp
+# Finly
 

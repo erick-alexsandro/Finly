@@ -11,11 +11,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ProfissionalRepository extends JpaRepository<Profissional, UUID> {
+public interface ProfissionalRepository extends JpaRepository<Profissional, Long> {
     
     List<Profissional> findByOrganizacaoId(String organizacaoId);
     
-    @Query("SELECT p FROM Profissional p WHERE p.organizacaoId = :organizacaoId AND LOWER(p.nome) LIKE LOWER(CONCAT('%', :nome, '%'))")   
+    @Query("SELECT p FROM Profissional p WHERE p.organizacaoId = :organizacaoId AND LOWER(p.nome) LIKE LOWER(CONCAT('%', :nome, '%'))")
     List<Profissional> findByOrganizacaoIdAndNomeContainingIgnoreCase(@Param("organizacaoId") String organizacaoId, @Param("nome") String nome);
     
     Optional<Profissional> findByOrganizacaoIdAndId(String organizacaoId, UUID id);

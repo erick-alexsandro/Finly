@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 /**
- * Procedimento (Procedure) entity - represents a dental procedure available in the clinic.
+ * Procedimento entity - represents a dental procedure available in the clinic.
  */
 @Entity
 @Table(name = "procedimento", indexes = {

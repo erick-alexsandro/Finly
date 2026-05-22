@@ -42,7 +42,7 @@ public class ProcedimentoService {
 
     public ProcedimentoDTO obterPorId(String id) {
         String orgId = TenantContext.getOrganizationId();
-        Procedimento procedimento = procedimentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Procedimento procedimento = procedimentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id))
                 .orElseThrow(() -> new IllegalArgumentException("Procedimento not found with ID: " + id));
         return toDTO(procedimento);
     }
@@ -68,7 +68,7 @@ public class ProcedimentoService {
         String orgId = TenantContext.getOrganizationId();
         log.info("Updating procedimento {} for organization: {}", id, orgId);
 
-        Procedimento procedimento = procedimentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Procedimento procedimento = procedimentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
                 .orElseThrow(() -> new IllegalArgumentException("Procedimento not found with ID: " + id));
 
         if (dto.getNome() != null) procedimento.setNome(dto.getNome());
@@ -86,7 +86,7 @@ public class ProcedimentoService {
         String orgId = TenantContext.getOrganizationId();
         log.info("Deleting procedimento {} for organization: {}", id, orgId);
 
-        Procedimento procedimento = procedimentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Procedimento procedimento = procedimentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
                 .orElseThrow(() -> new IllegalArgumentException("Procedimento not found with ID: " + id));
 
         procedimentoRepository.delete(procedimento);
@@ -94,7 +94,7 @@ public class ProcedimentoService {
 
     private ProcedimentoDTO toDTO(Procedimento procedimento) {
         return new ProcedimentoDTO(
-                procedimento.getId() != null ? procedimento.getId().toString() : null, // Convert UUID to String
+                procedimento.getId() != null ? procedimento.getId().toString() : null, 
                 procedimento.getNome(),
                 procedimento.getDescricao(),
                 procedimento.getDuracaoMinutos(),

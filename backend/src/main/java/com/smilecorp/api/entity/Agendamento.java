@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Agendamento (Appointment) entity - represents a scheduled appointment.
- */
+// Agendamento entity - represents a scheduled appointment.
 @Entity
 @Table(name = "agendamento", indexes = {
         @Index(name = "idx_agendamento_org_id", columnList = "organizacao_id"),
@@ -46,7 +44,6 @@ public class Agendamento extends BaseEntity {
     @Column(name = "status", length = 50, nullable = false, columnDefinition = "varchar(50) default 'agendado'")
     private String status;
 
-    // Store procedure IDs as JSON array
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "procedimentos_ids", columnDefinition = "jsonb")
     private List<String> procedimentosIds = new ArrayList<>();
@@ -166,7 +163,6 @@ public class Agendamento extends BaseEntity {
         this.confirmado = confirmado;
     }
 
-    // Convenience getters for API responses
     public String getPacienteNome() {
         return paciente != null ? paciente.getNome() : null;
     }

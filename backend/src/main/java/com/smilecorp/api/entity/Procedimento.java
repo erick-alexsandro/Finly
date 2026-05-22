@@ -3,9 +3,7 @@ package com.smilecorp.api.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
-/**
- * Procedimento (Procedure) entity - represents a dental procedure available in the clinic.
- */
+ // Procedimento entity - represents a dental procedure available in the clinic.
 @Entity
 @Table(name = "procedimento", indexes = {
         @Index(name = "idx_procedimento_org_id", columnList = "organizacao_id"),

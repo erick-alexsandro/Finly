@@ -40,6 +40,9 @@
 ### Testes
 - **Unitários**: JUnit
 - **BDD**: Cucumber 
+- **E2E**: Playwright
+
+
 
 ## Estrutura de Pastas
 
@@ -48,23 +51,35 @@ backend/
   ├── src/
   │   ├── main/
   │   │   ├── java/com/smilecorp/SmileCorp/
+  │   │   │   ├── config/            # Configurações
   │   │   │   ├── controller/        # Controladores REST
-  │   │   │   ├── model/             # Entidades JPA
-  │   │   │   └── repository/        # Repositórios de dados
+  │   │   │   ├── dto/               # DTOs (Data Transfer Objects)
+  │   │   │   ├── entity/            # Entidades do banco de dados
+  │   │   │   ├── repository/        # Repositórios de dados
+  │   │   │   ├── security/          # Segurança
+  │   │   │   ├── service/           # Serviços
+  │   │   │   └── util/              # Utilidades
   │   │   └── resources/
-  │   │       └── application.properties
   │   └── test/
   └── pom.xml
 frontend/
   ├── src/
   │   ├── app/
+  │   │   ├── api/                   # API de integração com o backend
+  │   │   ├── auth/                  # Página de autenticação
   │   │   ├── dashboard/             # Página do dashboard
-  │   │   └── scheduling/            # Página de agendamentos
-  |   |   └── finance/               # Página do financeiro
-  |   |   └── inventory/             # Página do estoque
+  │   │   ├── equipe/                # Página de equipe
+  |   |   ├── financial/             # Página do financeiro
+  |   |   ├── inventory/             # Página do estoque
+  |   |   ├── server-rendered-page/  # Página renderizada no servidor
+  |   |   └── treatment/             
+  │   │       └── scheduling/        # Página de agendamento
   │   ├── components/                # Componentes 
+  |   |   ├── layout/                # Layout
+  |   |   ├── shadcn-big-calendar/   # Componente do Shadcn Big Calendar
   │   │   └── ui/                    # Componentes de UI
   │   └── lib/
+  ├── tests/
   ├── package.json
   └── tsconfig.json
 docs/

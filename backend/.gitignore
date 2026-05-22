@@ -41,6 +41,9 @@ yarn-error.log*
 mvnw
 mvnw.cmd
 
+# Build Windows
+*.bat
+
 # Node (for tools)
 node_modules/
 

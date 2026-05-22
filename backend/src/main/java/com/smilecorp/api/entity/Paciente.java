@@ -2,9 +2,7 @@ package com.smilecorp.api.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Paciente (Patient) entity - represents a patient in the dental clinic.
- */
+// Paciente entity - represents a patient
 @Entity
 @Table(name = "paciente", indexes = {
         @Index(name = "idx_paciente_org_id", columnList = "organizacao_id"),

@@ -42,7 +42,7 @@ public class PacienteService {
 
     public PacienteDTO obterPorId(String id) {
         String orgId = TenantContext.getOrganizationId();
-        Paciente paciente = pacienteRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Paciente paciente = pacienteRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
                 .orElseThrow(() -> new IllegalArgumentException("Paciente not found with ID: " + id));
         return toDTO(paciente);
     }
@@ -70,7 +70,7 @@ public class PacienteService {
         String orgId = TenantContext.getOrganizationId();
         log.info("Updating paciente {} for organization: {}", id, orgId);
 
-        Paciente paciente = pacienteRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Paciente paciente = pacienteRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
                 .orElseThrow(() -> new IllegalArgumentException("Paciente not found with ID: " + id));
 
         if (dto.getNome() != null) paciente.setNome(dto.getNome());
@@ -90,7 +90,7 @@ public class PacienteService {
         String orgId = TenantContext.getOrganizationId();
         log.info("Deleting paciente {} for organization: {}", id, orgId);
 
-        Paciente paciente = pacienteRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Paciente paciente = pacienteRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
                 .orElseThrow(() -> new IllegalArgumentException("Paciente not found with ID: " + id));
 
         pacienteRepository.delete(paciente);
@@ -98,7 +98,7 @@ public class PacienteService {
 
     private PacienteDTO toDTO(Paciente paciente) {
         return new PacienteDTO(
-                paciente.getId() != null ? paciente.getId().toString() : null, // Convert UUID to String
+                paciente.getId() != null ? paciente.getId().toString() : null, 
                 paciente.getNome(),
                 paciente.getEmail(),
                 paciente.getTelefone(),

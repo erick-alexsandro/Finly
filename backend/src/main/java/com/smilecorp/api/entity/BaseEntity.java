@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDateTime;
 
-/**
- * Base entity with multi-tenant support.
- * All entities that need tenant isolation should extend this class.
- */
+ // Base entity with multi-tenant support.
+ // All entities that need tenant isolation should extend this class.
 @MappedSuperclass
 public class BaseEntity {
     @Id

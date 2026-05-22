@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.math.BigDecimal;
 
 public class ProcedimentoDTO {
-    private String id; // Changed to String for UUID compatibility
+    private String id; 
     private String nome;
     private String descricao;
     private Integer duracaoMinutos;
@@ -17,7 +17,7 @@ public class ProcedimentoDTO {
     public ProcedimentoDTO() {
     }
 
-    public ProcedimentoDTO(String id, String nome, String descricao, Integer duracaoMinutos, // Changed to String for UUID compatibility
+    public ProcedimentoDTO(String id, String nome, String descricao, Integer duracaoMinutos, 
                           BigDecimal preco, String categoria, Boolean ativo,
                           LocalDateTime criadoEm, LocalDateTime atualizadoEm) {
         this.id = id;
@@ -31,11 +31,11 @@ public class ProcedimentoDTO {
         this.atualizadoEm = atualizadoEm;
     }
 
-    public String getId() { // Changed to return String directly
+    public String getId() { 
         return id;
     }
 
-    public void setId(String id) { // Changed to String for UUID compatibility
+    public void setId(String id) {
         this.id = id;
     }
 

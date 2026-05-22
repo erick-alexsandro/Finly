@@ -66,11 +66,9 @@ public class SecurityConfig {
         this.neonAuthTokenValidator = neonAuthTokenValidator;
     }
 
-    /**
-     * JWT Filter that validates Neon Auth tokens and sets organization context.
-     * In dev mode (H2), skips JWT validation for testing.
-     * In prod mode (Neon), validates JWT and uses org ID from claims or header.
-     */
+     // JWT Filter that validates Neon Auth tokens and sets organization context.
+     // In dev mode (H2), skips JWT validation for testing.
+     // In prod mode (Neon), validates JWT and uses org ID from claims or header.
     public class NeonAuthTokenAuthenticationFilter extends OncePerRequestFilter {
         private static final Logger log = LoggerFactory.getLogger(NeonAuthTokenAuthenticationFilter.class);
         @Override
@@ -83,7 +81,7 @@ public class SecurityConfig {
                     // Development mode (H2): Skip JWT validation, use org ID from header
                     String organizationId = request.getHeader("X-Organization-Id");
                     if (organizationId == null) {
-                        organizationId = "org-dev-test"; // Fallback
+                        organizationId = "org-dev-test"; 
                     }
 
                     String userId = request.getHeader("X-User-Id");

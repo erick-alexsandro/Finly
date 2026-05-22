@@ -106,7 +106,11 @@ public class AgendamentoService {
         log.info("Created new patient with ID: {}", paciente.getId());
     }
 
+<<<<<<< Updated upstream
     Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, Long.parseLong(dto.getProfissionalId()))
+=======
+    Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(dto.getProfissionalId()))
+>>>>>>> Stashed changes
             .orElseThrow(() -> new IllegalArgumentException("Profissional not found: " + dto.getProfissionalId()));
 
     Agendamento agendamento = new Agendamento();
@@ -132,7 +136,11 @@ public class AgendamentoService {
         String orgId = TenantContext.getOrganizationId();
         log.info("Updating agendamento {} for organization: {}", id, orgId);
 
+<<<<<<< Updated upstream
         Agendamento agendamento = agendamentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id))
+=======
+        Agendamento agendamento = agendamentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
+>>>>>>> Stashed changes
                 .orElseThrow(() -> new IllegalArgumentException("Agendamento not found with ID: " + id));
 
         if (dto.getData() != null) agendamento.setData(dto.getData());
@@ -150,18 +158,30 @@ public class AgendamentoService {
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Invalid Patient ID format: " + dto.getPacienteId(), e);
             }
+<<<<<<< Updated upstream
             Paciente paciente = pacienteRepository.findByOrganizacaoIdAndId(orgId, newPacienteId)
+=======
+            Paciente paciente = pacienteRepository.findByOrganizacaoIdAndId(orgId, newPacienteId) 
+>>>>>>> Stashed changes
                     .orElseThrow(() -> new IllegalArgumentException("Paciente not found with ID: " + dto.getPacienteId()));
             agendamento.setPacienteId(newPacienteId); 
             agendamento.setPaciente(paciente);
         }
 
+<<<<<<< Updated upstream
         if (dto.getProfissionalId() != null && !dto.getProfissionalId().equals(agendamento.getProfissionalId().toString())) {
+=======
+        if (dto.getProfissionalId() != null && !dto.getProfissionalId().equals(agendamento.getProfissionalId().toString())) { 
+>>>>>>> Stashed changes
             UUID newProfissionalId;
             try { newProfissionalId = UUID.fromString(dto.getProfissionalId()); } catch (IllegalArgumentException e) { throw new IllegalArgumentException("Invalid Professional ID format: " + dto.getProfissionalId(), e); }
             Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, newProfissionalId) 
                     .orElseThrow(() -> new IllegalArgumentException("Profissional not found: " + dto.getProfissionalId()));
+<<<<<<< Updated upstream
             agendamento.setProfissionalId(newProfissionalId); 
+=======
+            agendamento.setProfissionalId(newProfissionalId);
+>>>>>>> Stashed changes
             agendamento.setProfissional(profissional);
         }
 
@@ -173,7 +193,11 @@ public class AgendamentoService {
         String orgId = TenantContext.getOrganizationId();
         log.info("Deleting agendamento {} for organization: {}", id, orgId);
 
+<<<<<<< Updated upstream
         Agendamento agendamento = agendamentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id))
+=======
+        Agendamento agendamento = agendamentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
+>>>>>>> Stashed changes
                 .orElseThrow(() -> new IllegalArgumentException("Agendamento not found with ID: " + id));
 
         agendamentoRepository.delete(agendamento);
@@ -181,13 +205,21 @@ public class AgendamentoService {
 
     private AgendamentoDTO toDTO(Agendamento agendamento) {
         return new AgendamentoDTO(
+<<<<<<< Updated upstream
                 agendamento.getId() != null ? agendamento.getId().toString() : null, 
+=======
+                agendamento.getId() != null ? agendamento.getId().toString() : null,
+>>>>>>> Stashed changes
                 agendamento.getData(),
                 agendamento.getHoraInicio(),
                 agendamento.getHoraFim(),
                 agendamento.getPacienteId() != null ? agendamento.getPacienteId().toString() : null, 
                 agendamento.getPaciente() != null ? agendamento.getPaciente().getNome() : null,
+<<<<<<< Updated upstream
                 agendamento.getProfissionalId() != null ? agendamento.getProfissionalId().toString() : null,
+=======
+                agendamento.getProfissionalId() != null ? agendamento.getProfissionalId().toString() : null, 
+>>>>>>> Stashed changes
                 agendamento.getProfissional() != null ? agendamento.getProfissional().getNome() : null,
                 agendamento.getStatus(),
                 agendamento.getProcedimentosIds(),

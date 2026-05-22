@@ -3,7 +3,7 @@ package com.smilecorp.api.entity;
 import jakarta.persistence.*;
 
 /**
- * Profissional (Professional/Staff) entity - represents a dental professional.
+ * Profissional entity - represents a dental professional.
  */
 @Entity
 @Table(name = "profissionais", indexes = {

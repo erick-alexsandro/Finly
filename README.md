@@ -40,6 +40,7 @@
 ### Testes
 - **Unitários**: JUnit
 - **BDD**: Cucumber 
+- **E2E**: Playwright
 
 ## Estrutura de Pastas
 
@@ -47,25 +48,37 @@
 backend/
   ├── src/
   │   ├── main/
-  │   │   ├── java/com/smilecorp/SmileCorp/
+  │   │   ├── java/com/smilecorp/api/
+  │   │   │   ├── config/            # Configurações 
   │   │   │   ├── controller/        # Controladores REST
-  │   │   │   ├── model/             # Entidades JPA
-  │   │   │   └── repository/        # Repositórios de dados
+  │   │   │   ├── dto/               # Data Transfer Objects 
+  │   │   │   ├── entity/            # Entidades JPA 
+  │   │   │   ├── repository/        # Repositórios de dados (Spring Data JPA)
+  │   │   │   ├── security/          # Autenticação JWT (Neon Auth)
+  │   │   │   ├── service/           # Lógica de negócio
+  │   │   │   ├── util/              # Utilitários (TenantContext)
+  │   │   │   └── SmileCorpApplication.java
   │   │   └── resources/
-  │   │       └── application.properties
+  │   │       ├── application.properties
+  │   │       ├── application.yml
+  │   │       ├── application-dev.yml
+  │   │       ├── application-prod.yml
+  │   │       └── db/                
   │   └── test/
-  └── pom.xml
+  ├── pom.xml
+  ├── start-backend.bat
+  └── target/                        # Build output
 frontend/
   ├── src/
-  │   ├── app/
-  │   │   ├── dashboard/             # Página do dashboard
-  │   │   └── scheduling/            # Página de agendamentos
-  |   |   └── finance/               # Página do financeiro
-  |   |   └── inventory/             # Página do estoque
-  │   ├── components/                # Componentes 
-  │   │   └── ui/                    # Componentes de UI
-  │   └── lib/
+  │   ├── app/                       # Páginas (Next.js App Router)
+  │   ├── components/                # Componentes React
+  │   │   └── ui/                    # Componentes de UI (shadcn/ui)
+  │   ├── lib/                       # Utilitários e funções auxiliares
+  │   └── types/                     # Tipos TypeScript
+  ├── tests/                         # Testes E2E (Playwright)
+  ├── proxy.ts                       # Proxy API (backend)
   ├── package.json
+  ├── next.config.ts
   └── tsconfig.json
 docs/
   ├── requisitos/

@@ -42,7 +42,7 @@ public class ProfissionalService {
 
     public ProfissionalDTO obterPorId(String id) {
         String orgId = TenantContext.getOrganizationId();
-        Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
                 .orElseThrow(() -> new IllegalArgumentException("Profissional not found with ID: " + id));
         return toDTO(profissional);
     }
@@ -69,7 +69,7 @@ public class ProfissionalService {
         String orgId = TenantContext.getOrganizationId();
         log.info("Updating profissional {} for organization: {}", id, orgId);
 
-        Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id))
                 .orElseThrow(() -> new IllegalArgumentException("Profissional not found with ID: " + id));
 
         if (dto.getNome() != null) profissional.setNome(dto.getNome());
@@ -88,7 +88,7 @@ public class ProfissionalService {
         String orgId = TenantContext.getOrganizationId();
         log.info("Deleting profissional {} for organization: {}", id, orgId);
 
-        Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) // Use UUID.fromString
+        Profissional profissional = profissionalRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
                 .orElseThrow(() -> new IllegalArgumentException("Profissional not found with ID: " + id));
 
         profissionalRepository.delete(profissional);
@@ -96,7 +96,7 @@ public class ProfissionalService {
 
     private ProfissionalDTO toDTO(Profissional profissional) {
         return new ProfissionalDTO(
-                profissional.getId() != null ? profissional.getId().toString() : null, // Convert UUID to String
+                profissional.getId() != null ? profissional.getId().toString() : null, 
                 profissional.getNome(),
                 profissional.getEmail(),
                 profissional.getTelefone(),

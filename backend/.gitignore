@@ -44,6 +44,9 @@ mvnw.cmd
 # Node (for tools)
 node_modules/
 
+# Spring Boot
+*.bat
+
 # System
 Thumbs.db
 .DS_Store

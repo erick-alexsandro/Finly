@@ -3,7 +3,7 @@ package com.smilecorp.api.entity;
 import jakarta.persistence.*;
 
 /**
- * Paciente (Patient) entity - represents a patient in the dental clinic.
+ * Paciente entity - represents a patient in the dental clinic.
  */
 @Entity
 @Table(name = "paciente", indexes = {

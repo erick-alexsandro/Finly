@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
-  DialogClose, // Importante para fechar o modal após excluir
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,37 +19,36 @@ interface ProductModalProps {
   trigger?: React.ReactNode;
   mode: "add" | "edit";
   initialData?: {
-  id: number; // Adicione o ID aqui
+  id: number;
   name: string;
   unit: string;
   quantity: number;
   minStock: number;
   price: number;
   };
-  onSuccess?: () => void; // Prop para atualizar a lista na página
+  onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductModalProps) {
+export function ProductModal({ trigger, mode, initialData, onSuccess, open, onOpenChange }: ProductModalProps) {
   const isEdit = mode === "edit";
 
-  // --- ESTADOS ---
   const [nome, setNome] = useState(initialData?.name || "");
   const [unidade, setUnidade] = useState(initialData?.unit || "");
   const [preco, setPreco] = useState(initialData?.price?.toString() || "");
   const [quantidade, setQuantidade] = useState(initialData?.quantity?.toString() || "");
   const [minCritico, setMinCritico] = useState(initialData?.minStock?.toString() || "");
-  const [loading, setLoading] = useState(false); // Estado para feedback visual
+  const [loading, setLoading] = useState(false);
 
-  // Sincroniza os campos quando o initialData muda
   useEffect(() => {
     if (isEdit && initialData) {
       setNome(initialData.name);
       setUnidade(initialData.unit);
-      setPreco(initialData.price.toString());
-      setQuantidade(initialData.quantity.toString());
-      setMinCritico(initialData.minStock.toString());
+      setPreco((initialData.price ?? 0).toString());
+      setQuantidade((initialData.quantity ?? 0).toString());
+      setMinCritico((initialData.minStock ?? 0).toString());
     } else {
-        // Limpa os campos se for modo "add"
         setNome("");
         setUnidade("");
         setPreco("");
@@ -58,26 +57,23 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
     }
   }, [initialData, isEdit]);
 
-  // Validação simples para habilitar o botão Salvar
   const formularioValido =
     nome.trim().length > 0 &&
     unidade !== "" &&
     preco !== "" &&
     quantidade !== "";
 
-  // --- FUNÇÃO PARA SALVAR/EDITAR (POST/PUT) ---
   const handleSalvar = async () => {
     setLoading(true);
     const dadosProduto = {
-      nome,
-      unidade,
-      preco: Number(preco),
-      quantidade: Number(quantidade),
-      minimoCritico: Number(minCritico),
+      name: nome,
+      unit: unidade,
+      price: Number(preco),
+      quantity: Number(quantidade),
+      minStock: Number(minCritico),
     };
     
     try {
-      // Ajuste a URL conforme o seu backend Java
       const url = isEdit 
         ? `http://localhost:8080/api/produtos/${initialData?.id}` 
         : "http://localhost:8080/api/produtos";
@@ -92,8 +88,7 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
 
       if (response.ok) {
         alert(isEdit ? "Produto atualizado com sucesso!" : "Produto cadastrado com sucesso!");
-        onSuccess?.(); // Recarrega a lista na página principal
-        // Se for cadastro, limpa os campos
+        onSuccess?.();
         if (!isEdit) {
             setNome("");
             setUnidade("");
@@ -112,9 +107,7 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
     }
   };
 
-  // --- NOVA FUNÇÃO PARA EXCLUIR (DELETE) ---
   const handleExcluir = async () => {
-    // Confirmação de segurança
     if (confirm(`Tem certeza absoluta que deseja excluir "${initialData?.name}" do estoque?`)) {
       setLoading(true);
       try {
@@ -124,8 +117,7 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
 
         if (response.ok) {
           alert("Material removido com sucesso!");
-          onSuccess?.(); // Recarrega a lista na página principal
-          // O modal fechará automaticamente por causa do DialogClose no footer
+          onSuccess?.();
         } else {
           alert("Erro ao excluir o material. Verifique se ele não está sendo usado.");
         }
@@ -138,15 +130,21 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
     }
   };
 
+  const controlled = open !== undefined;
+
   return (
-    <Dialog>
-      <DialogTrigger className={isEdit ? "" : "fixed bottom-8 right-8 h-14 w-14 rounded-full bg-[#1E293B] flex items-center justify-center text-white shadow-xl z-50 hover:bg-[#0F172A] transition-all active:scale-95 outline-none"}>
-        {isEdit ? (
-          trigger
-        ) : (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {controlled ? null : isEdit ? (
+        <DialogTrigger render={trigger as React.ReactElement} />
+      ) : (
+        <DialogTrigger
+          render={
+            <Button className="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-[#1E293B] flex items-center justify-center text-white shadow-xl z-50 hover:bg-[#0F172A] transition-all active:scale-95 outline-none" />
+          }
+        >
           <Plus className="h-7 w-7" strokeWidth={3} />
-        )}
-      </DialogTrigger>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -161,7 +159,6 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
         </DialogHeader>
 
         <div className="grid gap-6 py-5">
-          {/* Nome do Material */}
           <div className="grid gap-2 text-left">
             <Label htmlFor="nome">
               Nome do Material<span className="text-red-500">*</span>
@@ -175,7 +172,6 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
             />
           </div>
 
-          {/* Linha: Unidade e Preço */}
           <div className="flex gap-3 w-full items-start">
             <div className="grid gap-2 flex-1 text-left">
               <Label htmlFor="unidade-select">Unidade<span className="text-red-500">*</span></Label>
@@ -193,7 +189,7 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
             </div>
 
             <div className="grid gap-2 flex-1 text-left">
-              <Label htmlFor="preco">Preço Compra</Label>
+              <Label htmlFor="preco">Preço de unidade</Label>
               <div className="relative">
                 <DollarSign className="absolute left-2.5 top-3 h-4 w-4 text-gray-400" />
                 <Input
@@ -208,7 +204,6 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
             </div>
           </div>
 
-          {/* Linha: Quantidade e Estoque Mínimo */}
           <div className="flex gap-3 w-full items-start">
             <div className="grid gap-2 flex-1 text-left">
               <Label htmlFor="qty">
@@ -236,23 +231,22 @@ export function ProductModal({ trigger, mode, initialData, onSuccess }: ProductM
           </div>
         </div>
 
-        {/* --- FOOTER: AÇÕES --- */}
         <div className="flex justify-between items-center gap-2 border-t pt-4">
-          {/* Lado Esquerdo: Se for edição, mostra Excluir. Se não, renderiza uma div vazia para manter o Salvar na direita */}
           {isEdit ? (
-            <DialogClose 
+            <DialogClose
               onClick={handleExcluir}
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2 gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Excluir Material
-            </DialogClose>
+              render={
+                <Button variant="destructive" className="gap-2">
+                  <Trash2 className="h-4 w-4" />
+                  Excluir item
+                </Button>
+              }
+            />
           ) : (
             <div /> 
           )}
 
-          {/* Lado Direito: Botão Salvar */}
           <Button
             type="button"
             onClick={handleSalvar}

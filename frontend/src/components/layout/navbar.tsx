@@ -92,8 +92,8 @@ const navItems: NavItem[] = [
   {
     title: "Estoque",
     children: [
-      { title: "Produtos e Insumos", href: "/inventory/products",  description: "Gerencie os produtos e insumos do estoque", icon: Package },
-      { title: "Fornecedores",       href: "/suppliers", description: "Gerencie as informações dos fornecedores",  icon: Truck },
+      { title: "Produtos e Insumos", href: "/products",  description: "Gerencie os produtos e insumos do estoque", icon: Package },
+      { title: "Fornecedores",       href: "/inventory/suppliers", description: "Gerencie as informações dos fornecedores",  icon: Truck },
     ],
   },
 ];

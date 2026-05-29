@@ -76,23 +76,23 @@ const navItems: NavItem[] = [
     title: "Atendimentos",
     children: [
       { title: "Agenda",        href: "/treatment/scheduling", description: "Acompanhe os agendamentos e horários dos clientes", icon: Calendar },
-      { title: "Pacientes",     href: "/patients",             description: "Gerencie as informações dos pacientes",           icon: Users },
-      { title: "Pontuários",    href: "/points",               description: "Gerencie os pontos dos pacientes",               icon: ClipboardPlus },
-      { title: "Procedimentos", href: "/procedures",           description: "Visualize e altere os procedimentos",            icon: SquareActivity },
+      { title: "Pacientes",     href: "/treatment/patients",             description: "Gerencie as informações dos pacientes",           icon: Users },
+      { title: "Pontuários",    href: "/treatment/points",               description: "Gerencie os pontos dos pacientes",               icon: ClipboardPlus },
+      { title: "Procedimentos", href: "/treatment/procedures",           description: "Visualize e altere os procedimentos",            icon: SquareActivity },
     ],
   },
   {
     title: "Financeiro",
     children: [
-      { title: "Fluxo de Caixa",     href: "/cashflow",           description: "Acompanhe as entradas e saídas financeiras",       icon: Coins },
-      { title: "Contas a Pagar",     href: "/accounts-payable",   description: "Gerencie as contas a pagar e seus vencimentos",    icon: BanknoteArrowUp },
-      { title: "Contas a Receber",   href: "/accounts-receivable",description: "Gerencie as contas a receber e seus vencimentos",  icon: BanknoteArrowDown },
+      { title: "Fluxo de Caixa",     href: "/financial/cashflow",           description: "Acompanhe as entradas e saídas financeiras",       icon: Coins },
+      { title: "Contas a Pagar",     href: "/financial/accounts-payable",   description: "Gerencie as contas a pagar e seus vencimentos",    icon: BanknoteArrowUp },
+      { title: "Contas a Receber",   href: "/financial/accounts-receivable",description: "Gerencie as contas a receber e seus vencimentos",  icon: BanknoteArrowDown },
     ],
   },
   {
     title: "Estoque",
     children: [
-      { title: "Produtos e Insumos", href: "/products",  description: "Gerencie os produtos e insumos do estoque", icon: Package },
+      { title: "Produtos e Insumos", href: "/inventory/products",  description: "Gerencie os produtos e insumos do estoque", icon: Package },
       { title: "Fornecedores",       href: "/inventory/suppliers", description: "Gerencie as informações dos fornecedores",  icon: Truck },
     ],
   },

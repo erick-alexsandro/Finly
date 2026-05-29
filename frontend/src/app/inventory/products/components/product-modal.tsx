@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, DollarSign, Trash2, Save } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface ProductModalProps {
   trigger?: React.ReactNode;
@@ -75,13 +76,13 @@ export function ProductModal({ trigger, mode, initialData, onSuccess, open, onOp
     
     try {
       const url = isEdit 
-        ? `http://localhost:8080/api/produtos/${initialData?.id}` 
-        : "http://localhost:8080/api/produtos";
+        ? `/api/proxy/produtos?id=${initialData?.id}` 
+        : "/api/proxy/produtos";
       
       const method = isEdit ? "PUT" : "POST";
 
-      const response = await fetch(url, {
-        method: method,
+      const response = await apiFetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dadosProduto),
       });
@@ -111,7 +112,7 @@ export function ProductModal({ trigger, mode, initialData, onSuccess, open, onOp
     if (confirm(`Tem certeza absoluta que deseja excluir "${initialData?.name}" do estoque?`)) {
       setLoading(true);
       try {
-        const response = await fetch(`http://localhost:8080/api/produtos/${initialData?.id}`, {
+        const response = await apiFetch(`/api/proxy/produtos?id=${initialData?.id}`, {
           method: "DELETE",
         });
 
@@ -119,7 +120,8 @@ export function ProductModal({ trigger, mode, initialData, onSuccess, open, onOp
           alert("Material removido com sucesso!");
           onSuccess?.();
         } else {
-          alert("Erro ao excluir o material. Verifique se ele não está sendo usado.");
+          const errorData = await response.json().catch(() => ({}));
+          alert(`Erro ao excluir o material (status ${response.status}): ${errorData?.details || errorData?.error || "Verifique se ele não está sendo usado."}`);
         }
       } catch (error) {
         console.error("Erro de conexão ao excluir:", error);

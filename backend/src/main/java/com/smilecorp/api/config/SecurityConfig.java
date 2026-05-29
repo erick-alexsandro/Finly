@@ -33,8 +33,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -92,7 +90,10 @@ public class SecurityConfig {
                     // Development mode (H2): Skip JWT validation, use org ID from header
                     String organizationId = request.getHeader("X-Organization-Id");
                     if (organizationId == null) {
-                        organizationId = "6fd8b547-393d-4a2c-986b-31fbf998a4b9"; // Fallback - same org used in DataInitializerConfig
+                        log.warn("Missing X-Organization-Id header in dev mode for: {}", request.getRequestURI());
+                        response.setStatus(HttpStatus.FORBIDDEN.value());
+                        response.getWriter().write("{\"error\": \"Organization ID required (X-Organization-Id header)\"}");
+                        return;
                     }
 
                     String userId = request.getHeader("X-User-Id");
@@ -205,17 +206,5 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
-    
 }

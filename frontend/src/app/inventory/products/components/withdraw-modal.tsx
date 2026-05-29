@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowUpFromLine, Save } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Product {
   id: number;
@@ -37,7 +38,7 @@ export function WithdrawModal({ open, onOpenChange, onSuccess }: WithdrawModalPr
   useEffect(() => {
     if (open) {
       setLoadingList(true);
-      fetch("http://localhost:8080/api/produtos")
+      apiFetch("/api/proxy/produtos")
         .then((res) => res.ok ? res.json() : [])
         .then((data) => setProducts(data))
         .catch(() => {})
@@ -57,7 +58,7 @@ export function WithdrawModal({ open, onOpenChange, onSuccess }: WithdrawModalPr
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:8080/api/produtos/${selectedId}`, {
+      const response = await apiFetch(`/api/proxy/produtos?id=${selectedId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quantity: newQty }),

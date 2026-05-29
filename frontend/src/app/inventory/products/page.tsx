@@ -7,6 +7,7 @@ import { RestockModal } from "./components/restock-modal";
 import { WithdrawModal } from "./components/withdraw-modal";
 import { AdjustModal } from "./components/adjust-modal";
 import { Plus, Package, ArrowUpFromLine, Equal, ChevronDown } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Product {
   id: number;
@@ -41,7 +42,7 @@ export default function InventoryPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/api/produtos");
+      const response = await apiFetch("/api/proxy/produtos");
       if (response.ok) {
         const data = await response.json();
         setProducts(data);

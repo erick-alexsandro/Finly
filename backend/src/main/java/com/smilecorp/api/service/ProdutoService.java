@@ -141,6 +141,11 @@ public class ProdutoService {
         Produto item = produtoRepository.findByOrganizacaoIdAndId(orgId, id)
                 .orElseThrow(() -> new IllegalArgumentException("Produto not found with ID: " + id));
 
+        entityManager.createQuery("DELETE FROM MovimentoEstoque m WHERE m.produtoId = :produtoId AND m.organizacaoId = :orgId")
+                .setParameter("produtoId", id)
+                .setParameter("orgId", orgId)
+                .executeUpdate();
+
         produtoRepository.delete(item);
     }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { Package, AlertTriangle, Edit2, Clock, ArrowDown, ArrowUp, ChevronDown, ChevronUp } from "lucide-react";
 import { ProductModal } from "./product-modal";
 
@@ -46,7 +47,7 @@ export function ProductCard({ product, onDelete }: ProductCardProps) {
     if (movements.length === 0) {
       setLoadingHistory(true);
       try {
-        const response = await fetch(`http://localhost:8080/api/movimentos?produtoId=${product.id}`);
+        const response = await apiFetch(`/api/proxy/produtos?movimentos&produtoId=${product.id}`);
         if (response.ok) {
           const data = await response.json();
           setMovements(data);

@@ -2,8 +2,6 @@ import { auth } from "@/lib/auth/server";
 import { NextRequest, NextResponse } from "next/server";
 import { getOrganizations } from "@/lib/db";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8080";
-
 async function getJwtToken(sessionId: string): Promise<string | null> {
   try {
     const neonAuthUrl = process.env.NEON_AUTH_BASE_URL;
@@ -31,7 +29,7 @@ async function getSessionContext(req: NextRequest) {
 
   let token = await getJwtToken(sessionId);
   if (!token) {
-    console.warn("[suppliers] JWT token unavailable, using dev-mode token");
+    console.warn("[produtos] JWT token unavailable, using dev-mode token");
     token = "dev-mode-token";
   }
 
@@ -40,7 +38,7 @@ async function getSessionContext(req: NextRequest) {
       const orgs = await getOrganizations(session.user?.id);
       if (orgs.length > 0) orgId = orgs[0].id;
     } catch (dbError) {
-      console.error("[suppliers] Error fetching org:", dbError);
+      console.error("[produtos] Error fetching org:", dbError);
     }
   }
 
@@ -54,19 +52,38 @@ export async function GET(req: NextRequest) {
     if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
-    const params = new URLSearchParams();
-    if (searchParams.get("nome")) params.append("nome", searchParams.get("nome")!);
-    if (searchParams.get("status")) params.append("status", searchParams.get("status")!);
 
-    const res = await fetch(`${BACKEND_URL}/api/suppliers?${params}`, {
+    if (searchParams.get("movimentos") !== null) {
+      const params = new URLSearchParams();
+      if (searchParams.get("produtoId")) params.append("produtoId", searchParams.get("produtoId")!);
+      const backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/movimentos?${params}`;
+      const res = await fetch(backendUrl, {
+        headers: { Authorization: `Bearer ${ctx.token}`, "X-Organization-Id": ctx.orgId, "Content-Type": "application/json" },
+      });
+      if (res.ok) return NextResponse.json(await res.json());
+      return NextResponse.json({ error: "Backend error" }, { status: res.status });
+    }
+
+    const params = new URLSearchParams();
+    if (searchParams.get("name")) params.append("name", searchParams.get("name")!);
+    if (searchParams.get("id")) {
+      const backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/produtos/${searchParams.get("id")}`;
+      const res = await fetch(backendUrl, {
+        headers: { Authorization: `Bearer ${ctx.token}`, "X-Organization-Id": ctx.orgId, "Content-Type": "application/json" },
+      });
+      if (res.ok) return NextResponse.json(await res.json());
+      return NextResponse.json({ error: "Backend error" }, { status: res.status });
+    }
+
+    const backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/produtos?${params}`;
+    const res = await fetch(backendUrl, {
       headers: { Authorization: `Bearer ${ctx.token}`, "X-Organization-Id": ctx.orgId, "Content-Type": "application/json" },
     });
-
     if (res.ok) return NextResponse.json(await res.json());
-    const errorText = await res.text();
-    return NextResponse.json({ error: "Backend error", status: res.status, details: errorText.slice(0, 500) }, { status: res.status });
+    return NextResponse.json({ error: "Backend error" }, { status: res.status });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 });
+    console.error("[produtos GET]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -75,18 +92,29 @@ export async function POST(req: NextRequest) {
     const ctx = await getSessionContext(req);
     if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    const action = searchParams.get("action");
     const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/api/suppliers`, {
+
+    let backendUrl: string;
+    if (action === "repor-estoque" && id) {
+      backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/produtos/${id}/repor-estoque`;
+    } else {
+      backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/produtos`;
+    }
+
+    const res = await fetch(backendUrl, {
       method: "POST",
       headers: { Authorization: `Bearer ${ctx.token}`, "X-Organization-Id": ctx.orgId, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-
     if (res.ok) return NextResponse.json(await res.json());
     const errorText = await res.text();
-    return NextResponse.json({ error: "Backend error", status: res.status, details: errorText.slice(0, 500) }, { status: res.status });
+    return NextResponse.json({ error: "Backend error", details: errorText.slice(0, 500) }, { status: res.status });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 });
+    console.error("[produtos POST]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -97,20 +125,22 @@ export async function PUT(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "Missing supplier ID" }, { status: 400 });
+    if (!id) return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
 
     const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/api/suppliers/${id}`, {
+    const backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/produtos/${id}`;
+
+    const res = await fetch(backendUrl, {
       method: "PUT",
       headers: { Authorization: `Bearer ${ctx.token}`, "X-Organization-Id": ctx.orgId, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-
     if (res.ok) return NextResponse.json(await res.json());
     const errorText = await res.text();
-    return NextResponse.json({ error: "Backend error", status: res.status, details: errorText.slice(0, 500) }, { status: res.status });
+    return NextResponse.json({ error: "Backend error", details: errorText.slice(0, 500) }, { status: res.status });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 });
+    console.error("[produtos PUT]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -121,17 +151,20 @@ export async function DELETE(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "Missing supplier ID" }, { status: 400 });
+    if (!id) return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
 
-    const res = await fetch(`${BACKEND_URL}/api/suppliers/${id}`, {
+    const backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/produtos/${id}`;
+
+    const res = await fetch(backendUrl, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${ctx.token}`, "X-Organization-Id": ctx.orgId, "Content-Type": "application/json" },
     });
-
     if (res.ok || res.status === 204) return new NextResponse(null, { status: 204 });
     const errorText = await res.text();
+    console.error(`[produtos DELETE] Backend returned ${res.status}: ${errorText.slice(0, 500)}`);
     return NextResponse.json({ error: "Backend error", status: res.status, details: errorText.slice(0, 500) }, { status: res.status });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 });
+    console.error("[produtos DELETE]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

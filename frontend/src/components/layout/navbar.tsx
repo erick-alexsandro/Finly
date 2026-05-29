@@ -105,21 +105,23 @@ const ListItem = React.forwardRef<
   React.ComponentPropsWithoutRef<"a"> & { title: string; icon?: React.ElementType; badge?: string }
 >(({ className, title, children, icon: Icon, badge, ...props }, ref) => (
   <li>
-    <NavigationMenuLink asChild>
-      <a ref={ref} className={cn("group flex select-none gap-3 rounded-lg p-3 leading-none no-underline outline-none transition-colors hover:bg-accent focus:bg-accent", className)} {...props}>
-        {Icon && (
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background shadow-xs transition-colors group-hover:border-primary/30 group-hover:bg-primary/5">
-            <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-          </div>
-        )}
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium leading-none">{title}</span>
-            {badge && <Badge variant="secondary" className="h-4 rounded-sm px-1 py-0 text-[10px] font-semibold">{badge}</Badge>}
-          </div>
-          {children && <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">{children}</p>}
+    <NavigationMenuLink
+      ref={ref}
+      className={cn("group flex select-none gap-3 rounded-lg p-3 leading-none no-underline outline-none transition-colors hover:bg-accent focus:bg-accent", className)}
+      {...props}
+    >
+      {Icon && (
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background shadow-xs transition-colors group-hover:border-primary/30 group-hover:bg-primary/5">
+          <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
         </div>
-      </a>
+      )}
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium leading-none">{title}</span>
+          {badge && <Badge variant="secondary" className="h-4 rounded-sm px-1 py-0 text-[10px] font-semibold">{badge}</Badge>}
+        </div>
+        {children && <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">{children}</p>}
+      </div>
     </NavigationMenuLink>
   </li>
 ));
@@ -202,11 +204,13 @@ function MobileSheet({ user, clinic, onSignOut }: { user?: any; clinic?: any; on
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="lg:hidden">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Abrir menu</span>
-        </Button>
+      <SheetTrigger
+        render={
+          <Button variant="ghost" size="icon" className="lg:hidden" />
+        }
+      >
+        <Menu className="h-5 w-5" />
+        <span className="sr-only">Abrir menu</span>
       </SheetTrigger>
       <SheetContent side="left" className="flex w-80 flex-col p-0">
         <SheetHeader className="border-b px-4 py-3">

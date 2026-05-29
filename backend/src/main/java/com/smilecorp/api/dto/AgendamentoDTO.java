@@ -3,7 +3,7 @@ package com.smilecorp.api.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class AgendamentoDTO { // Changed to String for UUID compatibility
+public class AgendamentoDTO { 
     private String id;
     private LocalDateTime data;
     private String horaInicio;
@@ -24,7 +24,7 @@ public class AgendamentoDTO { // Changed to String for UUID compatibility
     public AgendamentoDTO() {
     }
 
-    public AgendamentoDTO(String id, LocalDateTime data, String horaInicio, String horaFim, // Changed to String for UUID compatibility
+    public AgendamentoDTO(String id, LocalDateTime data, String horaInicio, String horaFim,
                          String pacienteId, String pacienteNome, String profissionalId,
                          String profissionalNome, String status, List<String> procedimentosIds,
                          String observacoes, Boolean confirmado, LocalDateTime criadoEm,
@@ -45,15 +45,12 @@ public class AgendamentoDTO { // Changed to String for UUID compatibility
         this.atualizadoEm = atualizadoEm;
     }
 
-    // ────────────────────────────────────────────────────────────────────────────
     // GETTERS AND SETTERS
-    // ────────────────────────────────────────────────────────────────────────────
-
-    public String getId() { // Changed to return String directly
+    public String getId() { 
         return id;
     }
 
-    public void setId(String id) { // Changed to String for UUID compatibility
+    public void setId(String id) { 
         this.id = id;
     }
 

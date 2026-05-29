@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Agendamento (Appointment) entity - represents a scheduled appointment.
+ * Agendamento entity - represents a scheduled appointment.
  */
 @Entity
 @Table(name = "agendamento", indexes = {

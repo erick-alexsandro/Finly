@@ -1,5 +1,7 @@
 package com.smilecorp.api.security;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -27,10 +29,10 @@ import java.util.*;
 public class NeonAuthTokenValidator {
     private static final Logger log = LoggerFactory.getLogger(NeonAuthTokenValidator.class);
 
-    @Value("${neon.auth.jwks-uri}")
+    @Value("${neon.auth.jwks-uri:}")
     private String jwksUri;
 
-    @Value("${neon.auth.base-url}")
+    @Value("${neon.auth.base-url:}")
     private String neonAuthBaseUrl;
 
     private Map<String, String> jwksCache = new HashMap<>();
@@ -38,9 +40,11 @@ public class NeonAuthTokenValidator {
     private static final long CACHE_DURATION = 3600000; // 1 hour
 
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
     public NeonAuthTokenValidator(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.build();
+        this.objectMapper = new ObjectMapper();
     }
 
     /**
@@ -48,6 +52,10 @@ public class NeonAuthTokenValidator {
      */
     public Claims validateToken(String token) throws JwtException {
         try {
+            if (jwksUri == null || jwksUri.isEmpty()) {
+                throw new JwtException("JWKS URI not configured");
+            }
+
             // Try to validate with cached JWKS first
             Claims claims = validateWithCachedJwks(token);
             if (claims != null) {
@@ -103,10 +111,32 @@ public class NeonAuthTokenValidator {
                     .bodyToMono(String.class)
                     .block();
 
+            if (jwksJson == null || jwksJson.isEmpty()) {
+                throw new RuntimeException("Empty JWKS response");
+            }
+
             Map<String, String> jwks = new HashMap<>();
-            // Parse JWKS JSON (simplified - you may need to add JSON parsing)
-            // This is a placeholder - implement proper JSON parsing for JWKS
-            log.info("JWKS fetched successfully");
+            JsonNode root = objectMapper.readTree(jwksJson);
+            JsonNode keys = root.get("keys");
+
+            if (keys != null && keys.isArray()) {
+                for (JsonNode key : keys) {
+                    String kid = key.get("kid").asText();
+                    String x5c = null;
+
+                    if (key.has("x5c") && key.get("x5c").isArray()) {
+                        x5c = "-----BEGIN PUBLIC KEY-----\n" +
+                              key.get("x5c").get(0).asText() +
+                              "\n-----END PUBLIC KEY-----";
+                    }
+
+                    if (kid != null && x5c != null) {
+                        jwks.put(kid, x5c);
+                    }
+                }
+            }
+
+            log.info("JWKS fetched successfully with {} keys", jwks.size());
             return jwks;
         } catch (Exception e) {
             log.error("Failed to fetch JWKS: {}", e.getMessage());
@@ -116,14 +146,20 @@ public class NeonAuthTokenValidator {
 
     private String getKeyIdFromToken(String token) {
         try {
-            Claims unverifiedClaims = Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor("placeholder".getBytes()))
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-            return (String) unverifiedClaims.get("kid");
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) {
+                return null;
+            }
+
+            String header = new String(Base64.getDecoder().decode(parts[0]));
+            JsonNode headerNode = objectMapper.readTree(header);
+
+            if (headerNode.has("kid")) {
+                return headerNode.get("kid").asText();
+            }
+            return null;
         } catch (Exception e) {
-            log.debug("Could not extract kid from token header");
+            log.debug("Could not extract kid from token header: {}", e.getMessage());
             return null;
         }
     }
@@ -158,3 +194,4 @@ public class NeonAuthTokenValidator {
         return claims.getSubject();
     }
 }
+

@@ -29,7 +29,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -49,17 +52,16 @@ public class SecurityConfig {
     private final NeonAuthTokenValidator neonAuthTokenValidator;
 
     private boolean isDevMode() {
-        // Check if explicitly set to dev mode or using H2 database (development mode)
         String devMode = System.getenv("DEV_MODE");
-        if ("true".equalsIgnoreCase(devMode)) {
-            return true;
-        }
-        
+        if ("true".equalsIgnoreCase(devMode)) return true;
+        devMode = System.getProperty("DEV_MODE");
+        if ("true".equalsIgnoreCase(devMode)) return true;
+
         String dbUrl = System.getenv("DATABASE_URL");
         if (dbUrl == null) {
             dbUrl = System.getProperty("spring.datasource.url", "jdbc:h2:mem:smilecorp");
         }
-        return dbUrl.contains("h2:mem") || dbUrl.contains("h2:tcp");
+        return dbUrl != null && (dbUrl.contains("h2:mem") || dbUrl.contains("h2:tcp"));
     }
 
     public SecurityConfig(NeonAuthTokenValidator neonAuthTokenValidator) {
@@ -77,6 +79,11 @@ public class SecurityConfig {
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                 throws ServletException, IOException {
             try {
+                if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 String authHeader = request.getHeader("Authorization");
 
                 if (isDevMode()) {
@@ -159,29 +166,43 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/actuator/**", "/health").permitAll()
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(new NeonAuthTokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling()
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\": \"" + authException.getMessage() + "\"}");
-                });
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf().disable()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            .authorizeHttpRequests(authz -> authz
+                    .requestMatchers("/actuator/**", "/health").permitAll()
+                    .requestMatchers("/api/**").authenticated()
+                    .anyRequest().authenticated()
+            )
+            .addFilterBefore(new NeonAuthTokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling()
+            .authenticationEntryPoint((request, response, authException) -> {
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"" + authException.getMessage() + "\"}");
+            });
 
-        return http.build();
-    }
+    return http.build();
+}
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+    
 }

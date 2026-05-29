@@ -71,7 +71,7 @@ export default function SchedulingPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [allDoctors, setAllDoctors] = useState<string[]>([]);
   const [procedimentosMap, setProcedimentosMap] = useState<
-    Record<number, string>
+    Record<string, string>
   >({});
   const [reloadToken, setReloadToken] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -115,7 +115,7 @@ export default function SchedulingPage() {
   const idsDoBanco = item.procedimentosIds || [];
   
   const byId = idsDoBanco.length
-    ? idsDoBanco.map((id: number) => procedimentosMap[id]).filter(Boolean)
+    ? idsDoBanco.map((id: string) => procedimentosMap[id]).filter(Boolean)
     : [];
 
   const procedureText = byId.length > 0 
@@ -162,9 +162,9 @@ export default function SchedulingPage() {
         const res = await apiFetch(`/api/proxy/procedimentos`);
         if (!res.ok) return;
         const data = await res.json();
-        const map: Record<number, string> = {};
+        const map: Record<string, string> = {};
         data.forEach((p: any) => {
-          if (p?.id != null) map[Number(p.id)] = p.nome || "Procedimento";
+          if (p?.id != null) map[String(p.id)] = p.nome || "Procedimento";
         });
         setProcedimentosMap(map);
       } catch {}

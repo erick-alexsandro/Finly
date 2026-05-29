@@ -275,8 +275,14 @@ class ProdutoServiceTest {
         when(produtoRepository.findByOrganizacaoIdAndId(ORG_ID, 1L))
                 .thenReturn(Optional.of(existing));
 
+        jakarta.persistence.Query deleteQuery = mock(jakarta.persistence.Query.class);
+        when(entityManager.createQuery(anyString())).thenReturn(deleteQuery);
+        when(deleteQuery.setParameter(anyString(), any())).thenReturn(deleteQuery);
+
         produtoService.deletar(1L);
 
+        verify(entityManager).createQuery("DELETE FROM MovimentoEstoque m WHERE m.produtoId = :produtoId AND m.organizacaoId = :orgId");
+        verify(deleteQuery).executeUpdate();
         verify(produtoRepository).delete(existing);
     }
 

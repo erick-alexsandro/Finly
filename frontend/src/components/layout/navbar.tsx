@@ -77,16 +77,14 @@ const navItems: NavItem[] = [
     children: [
       { title: "Agenda",        href: "/treatment/scheduling", description: "Acompanhe os agendamentos e horários dos clientes", icon: Calendar },
       { title: "Pacientes",     href: "/treatment/patients",             description: "Gerencie as informações dos pacientes",           icon: Users },
-      { title: "Pontuários",    href: "/treatment/points",               description: "Gerencie os pontos dos pacientes",               icon: ClipboardPlus },
       { title: "Procedimentos", href: "/treatment/procedures",           description: "Visualize e altere os procedimentos",            icon: SquareActivity },
     ],
   },
   {
     title: "Financeiro",
     children: [
-      { title: "Fluxo de Caixa",     href: "/financial/cashflow",           description: "Acompanhe as entradas e saídas financeiras",       icon: Coins },
-      { title: "Contas a Pagar",     href: "/financial/accounts-payable",   description: "Gerencie as contas a pagar e seus vencimentos",    icon: BanknoteArrowUp },
-      { title: "Contas a Receber",   href: "/financial/accounts-receivable",description: "Gerencie as contas a receber e seus vencimentos",  icon: BanknoteArrowDown },
+      { title: "Fluxo de Caixa",              href: "/financial/cashflow",           description: "Acompanhe as entradas e saídas financeiras",       icon: Coins },
+      { title: "Controle Financeiro",   href: "/financial/budget-tracking",   description: "Acompanhe receitas, despesas e lançamentos fixos",    icon: BanknoteArrowUp },
     ],
   },
   {

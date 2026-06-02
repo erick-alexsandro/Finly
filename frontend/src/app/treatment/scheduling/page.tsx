@@ -298,7 +298,7 @@ export default function SchedulingPage() {
                         onValueChange={(v) =>
                           setFiltersDraft({
                             ...filtersDraft,
-                            doctor: v === "none" ? "" : v,
+                            doctor: v === "none" ? "" : v ?? "",
                           })
                         }
                       >

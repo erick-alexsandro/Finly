@@ -23,10 +23,10 @@ async function getJwtToken(sessionId: string): Promise<string | null> {
 }
 
 async function getSessionContext(req: NextRequest) {
-  const { data: session } = await auth.getSession(req);
+  const { data: session } = await auth.getSession();
   if (!session?.user) return null;
 
-  let orgId = session.session?.activeOrganizationId;
+  let orgId = (session.session as any)?.activeOrganizationId;
   const sessionId = session.session?.id;
 
   let token = await getJwtToken(sessionId);

@@ -6,6 +6,8 @@ import com.smilecorp.api.entity.Paciente;
 import com.smilecorp.api.entity.Profissional;
 import com.smilecorp.api.repository.AgendamentoRepository;
 import com.smilecorp.api.repository.PacienteRepository;
+import com.smilecorp.api.repository.ProcedimentoMaterialRepository;
+import com.smilecorp.api.repository.ProdutoRepository;
 import com.smilecorp.api.repository.ProfissionalRepository;
 import com.smilecorp.api.service.AgendamentoService;
 import com.smilecorp.api.util.TenantContext;
@@ -32,6 +34,8 @@ public class SchedulingSteps {
     private AgendamentoRepository agendamentoRepository;
     private PacienteRepository pacienteRepository;
     private ProfissionalRepository profissionalRepository;
+    private ProcedimentoMaterialRepository procedimentoMaterialRepository;
+    private ProdutoRepository produtoRepository;
 
     private AgendamentoDTO createdAppointment;
     private Exception thrownException;
@@ -46,8 +50,11 @@ public class SchedulingSteps {
         agendamentoRepository = mock(AgendamentoRepository.class);
         pacienteRepository = mock(PacienteRepository.class);
         profissionalRepository = mock(ProfissionalRepository.class);
+        procedimentoMaterialRepository = mock(ProcedimentoMaterialRepository.class);
+        produtoRepository = mock(ProdutoRepository.class);
         agendamentoService = new AgendamentoService(
-                agendamentoRepository, pacienteRepository, profissionalRepository);
+                agendamentoRepository, pacienteRepository, profissionalRepository,
+                procedimentoMaterialRepository, produtoRepository);
     }
 
     @Given("um profissional existe com ID {string} e nome {string}")

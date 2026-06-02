@@ -10,7 +10,7 @@ export default function HomePage() {
       <p className="text-gray-500">Selecione um módulo para começar</p>
       
       <div className="flex gap-4">
-        <Link href="/scheduling">
+        <Link href="/treatment/scheduling">
           <Button size="lg">Ir para Agenda</Button>
         </Link>
         

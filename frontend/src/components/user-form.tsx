@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { apiPost } from '@/lib/api';
 
 export default function UserForm() {
   const [name, setName] = useState('');
@@ -8,15 +9,15 @@ export default function UserForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    await fetch('http://localhost:8080/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email }),
-    });
-
-    alert('User added!');
-    setName('');
-    setEmail('');
+    try {
+      await apiPost('http://localhost:8080/api/users', { name, email });
+      alert('User added!');
+      setName('');
+      setEmail('');
+    } catch (error) {
+      console.error('Error adding user:', error);
+      alert('Failed to add user.');
+    }
   };
 
   return (

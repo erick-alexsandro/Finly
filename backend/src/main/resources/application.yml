@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: smilecorp-backend
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/smilecorp}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+logging:
+  level:
+    root: INFO
+    com.smilecorp: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Neon Auth Configuration
+neon:
+  auth:
+    base-url: ${NEON_AUTH_BASE_URL:https://example.neonauth.example/auth}
+    jwks-uri: ${NEON_AUTH_JWKS_URI:https://example.neonauth.example/auth/.well-known/jwks.json}

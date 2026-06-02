@@ -64,6 +64,6 @@ declare module 'react-big-calendar' {
     [key: string]: any;
   }
 
-  const Calendar: ComponentType<CalendarProps>;
+  export const Calendar: ComponentType<CalendarProps>;
   export default Calendar;
 }

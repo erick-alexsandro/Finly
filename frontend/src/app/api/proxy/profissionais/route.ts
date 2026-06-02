@@ -31,13 +31,13 @@ async function getJwtToken(sessionId: string): Promise<string | null> {
 
 export async function GET(req: NextRequest) {
   try {
-    const { data: session } = await auth.getSession(req);
+    const { data: session } = await auth.getSession();
 
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let orgId = session.session?.activeOrganizationId;
+    let orgId = (session.session as any)?.activeOrganizationId;
     const sessionId = session.session?.id;
 
     let token = await getJwtToken(sessionId);
@@ -94,3 +94,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

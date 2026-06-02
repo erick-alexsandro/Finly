@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    const { data: session } = await auth.getSession(req);
+    const { data: session } = await auth.getSession();
 
     // === COMPREHENSIVE DEBUGGING ===
     console.log("=== SESSION DEBUG ===");
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { data: session } = await auth.getSession(req);
+    const { data: session } = await auth.getSession();
 
     const orgId = 
       (session?.session as any)?.activeOrganizationId ||

@@ -1,1 +1,3 @@
-//teste
+export default function FinancialPage() {
+  return <div className="p-8"><h1 className="text-2xl font-semibold">Financeiro</h1></div>;
+}

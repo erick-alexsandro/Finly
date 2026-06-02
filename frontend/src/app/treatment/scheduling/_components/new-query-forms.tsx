@@ -239,7 +239,7 @@ const handleSalvar = async () => {
         if (!v) resetForm();
       }}
     >
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Button>Agendar Nova Consulta</Button>
       </DialogTrigger>
 

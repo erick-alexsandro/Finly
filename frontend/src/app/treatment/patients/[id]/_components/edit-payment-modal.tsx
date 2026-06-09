@@ -80,7 +80,7 @@ export function EditPaymentModal({ open, onOpenChange, payment, onSave }: Props)
           </div>
           <div className="grid gap-2">
             <Label>Forma de Pagamento</Label>
-            <Select value={formaPagamento} onValueChange={setFormaPagamento}>
+            <Select value={formaPagamento} onValueChange={(v) => setFormaPagamento(v ?? '')}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
@@ -96,7 +96,7 @@ export function EditPaymentModal({ open, onOpenChange, payment, onSave }: Props)
           </div>
           <div className="grid gap-2">
             <Label>Status</Label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={(v) => setStatus(v ?? '')}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>

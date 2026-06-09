@@ -29,39 +29,43 @@ async function getJwtToken(sessionId: string): Promise<string | null> {
   }
 }
 
-export async function GET(req: NextRequest) {
+async function resolveSession(req: NextRequest) {
   try {
     const { data: session } = await auth.getSession();
 
-  if (!session?.user) {
-    return { error: "Unauthorized", status: 401 };
-  }
+    if (!session?.user) {
+      return { error: "Unauthorized", status: 401 };
+    }
 
     let orgId = (session.session as any)?.activeOrganizationId;
     const sessionId = session.session?.id;
 
-  let token = await getJwtToken(sessionId);
-  if (!token) {
-    console.warn("[procedimentos] JWT token unavailable, using dev-mode token");
-    token = "dev-mode-token";
-  }
-
-  if (!orgId) {
-    try {
-      const orgs = await getOrganizations(session.user?.id);
-      if (orgs.length > 0) {
-        orgId = orgs[0].id;
-      }
-    } catch (dbError) {
-      console.error("[procedimentos] Error fetching org:", dbError);
+    let token = await getJwtToken(sessionId);
+    if (!token) {
+      console.warn("[procedimentos] JWT token unavailable, using dev-mode token");
+      token = "dev-mode-token";
     }
-  }
 
-  if (!orgId) {
-    return { error: "No active organization", status: 403 };
-  }
+    if (!orgId) {
+      try {
+        const orgs = await getOrganizations(session.user?.id);
+        if (orgs.length > 0) {
+          orgId = orgs[0].id;
+        }
+      } catch (dbError) {
+        console.error("[procedimentos] Error fetching org:", dbError);
+      }
+    }
 
-  return { orgId, token };
+    if (!orgId) {
+      return { error: "No active organization", status: 403 };
+    }
+
+    return { orgId, token };
+  } catch (error) {
+    console.error("[procedimentos] resolveSession error:", error);
+    return { error: "Internal server error", status: 500 };
+  }
 }
 
 export async function GET(req: NextRequest) {

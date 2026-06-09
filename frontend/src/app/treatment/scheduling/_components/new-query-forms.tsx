@@ -14,6 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2 } from "lucide-react";
+import { checkMaterialStock } from "@/lib/stock";
+import { StockWarningDialog } from "@/components/stock-warning-dialog";
+import type { StockWarning } from "@/lib/stock";
 
 interface Props {
   /** Called after a successful save so the parent calendar can refresh. */
@@ -58,6 +61,8 @@ export function NewQueryForms({ onSuccess }: Props) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [stockWarnings, setStockWarnings] = useState<StockWarning[]>([]);
+  const [showStockWarning, setShowStockWarning] = useState(false);
 
   const pacienteRef = useRef<HTMLDivElement>(null);
   const profissionalRef = useRef<HTMLDivElement>(null);
@@ -140,7 +145,7 @@ export function NewQueryForms({ onSuccess }: Props) {
       setSugestoesProcedimentos([]);
       return;
     }
-    apiFetch(`/api/proxy/procedimentos?nome=${encodeURIComponent(buscaProcedimento)}`)
+    apiFetch(`/api/proxy/procedimentos?nome=${encodeURIComponent(buscaProcedimento)}&ativo=true`)
       .then((r) => (r.ok ? r.json() : []))
       .then(setSugestoesProcedimentos)
       .catch(() => setSugestoesProcedimentos([]));
@@ -153,7 +158,7 @@ export function NewQueryForms({ onSuccess }: Props) {
       return;
     }
     const total = procedimentosSelecionados.reduce(
-      (acc, p) => acc + (Number(p.duracao) || 30),
+      (acc, p) => acc + (Number(p.duracaoMinutos) || 30),
       0,
     );
     const [h, m] = horarioInicio.split(":").map(Number);
@@ -208,6 +213,17 @@ const handleSalvar = async () => {
     if (res.ok) {
       setSaved(true);
       onSuccess?.();
+      const allMateriais = procedimentosSelecionados.flatMap(
+        (p: any) => p.materiais || []
+      );
+      if (allMateriais.length > 0) {
+        const warnings = await checkMaterialStock(allMateriais);
+        if (warnings.length > 0) {
+          setStockWarnings(warnings);
+          setShowStockWarning(true);
+          return;
+        }
+      }
       setTimeout(() => {
         resetForm();
         setOpen(false);
@@ -232,6 +248,7 @@ const handleSalvar = async () => {
     procedimentosSelecionados.length > 0;
 
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(v) => {
@@ -401,7 +418,7 @@ const handleSalvar = async () => {
                           setBuscaProcedimento("");
                         }}
                       >
-                        {p.nome} ({p.duracao} min)
+                        {p.nome} ({p.duracaoMinutos} min)
                       </li>
                     ))}
                   </ul>
@@ -493,5 +510,11 @@ const handleSalvar = async () => {
         )}
       </DialogContent>
     </Dialog>
+      <StockWarningDialog
+        open={showStockWarning}
+        onClose={() => { setShowStockWarning(false); setOpen(false); resetForm(); }}
+        warnings={stockWarnings}
+      />
+    </>
   );
 }

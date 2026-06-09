@@ -196,10 +196,23 @@ export default function SchedulingPage() {
   const handleNavigate = (d: Date) => setDate(d);
   const handleViewChange = (v: SetStateAction<any>) => setView(v);
 
+  const professionalColors = [
+    "#3B82F6", "#EF4444", "#10B981", "#F59E0B",
+    "#8B5CF6", "#EC4899", "#06B6D4", "#F97316",
+  ];
+
+  const getProfessionalColor = (name: string) => {
+    const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return professionalColors[hash % professionalColors.length];
+  };
+
   const eventPropGetter: CalendarProps<CalendarEvent>["eventPropGetter"] = (
     e,
   ) => ({
     className: `event-variant-${e.variant ?? "primary"}`,
+    style: {
+      borderLeft: `4px solid ${getProfessionalColor(e.title)}`,
+    },
   });
 
   const filteredEvents = events.filter((e) => {

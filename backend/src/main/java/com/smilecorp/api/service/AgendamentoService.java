@@ -2,20 +2,29 @@ package com.smilecorp.api.service;
 
 import com.smilecorp.api.dto.AgendamentoDTO;
 import com.smilecorp.api.entity.Agendamento;
+import com.smilecorp.api.entity.MovimentoEstoque;
 import com.smilecorp.api.entity.Paciente;
+import com.smilecorp.api.entity.ProcedimentoMaterial;
+import com.smilecorp.api.entity.Produto;
 import com.smilecorp.api.entity.Profissional;
 import com.smilecorp.api.repository.AgendamentoRepository;
 import com.smilecorp.api.repository.PacienteRepository;
+import com.smilecorp.api.repository.ProcedimentoMaterialRepository;
+import com.smilecorp.api.repository.ProdutoRepository;
 import com.smilecorp.api.repository.ProfissionalRepository;
 import com.smilecorp.api.util.TenantContext;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,13 +35,22 @@ public class AgendamentoService {
     private final AgendamentoRepository agendamentoRepository;
     private final PacienteRepository pacienteRepository;
     private final ProfissionalRepository profissionalRepository;
+    private final ProcedimentoMaterialRepository procedimentoMaterialRepository;
+    private final ProdutoRepository produtoRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, 
                              PacienteRepository pacienteRepository,
-                             ProfissionalRepository profissionalRepository) {
+                             ProfissionalRepository profissionalRepository,
+                             ProcedimentoMaterialRepository procedimentoMaterialRepository,
+                             ProdutoRepository produtoRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.pacienteRepository = pacienteRepository;
         this.profissionalRepository = profissionalRepository;
+        this.procedimentoMaterialRepository = procedimentoMaterialRepository;
+        this.produtoRepository = produtoRepository;
     }
 
     public List<AgendamentoDTO> listar(String profissionalId, String pacienteId, LocalDateTime startDate, LocalDateTime endDate) {
@@ -134,6 +152,11 @@ public class AgendamentoService {
 
     Agendamento saved = agendamentoRepository.save(agendamento);
     log.info("Created appointment with ID: {}", saved.getId());
+
+    if (dto.getProcedimentosIds() != null && !dto.getProcedimentosIds().isEmpty()) {
+        deduzirMateriaisEstoque(orgId, dto.getProcedimentosIds());
+    }
+
     return toDTO(saved);
 }
 
@@ -187,6 +210,63 @@ public class AgendamentoService {
                 .orElseThrow(() -> new IllegalArgumentException("Agendamento not found with ID: " + id));
 
         agendamentoRepository.delete(agendamento);
+    }
+
+    private void deduzirMateriaisEstoque(String orgId, List<String> procedimentosIds) {
+        Map<Long, Integer> materialQuantidades = new HashMap<>();
+        Map<Long, String> materialNomes = new HashMap<>();
+
+        for (String procIdStr : procedimentosIds) {
+            UUID procId;
+            try {
+                procId = UUID.fromString(procIdStr);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid procedure ID format: {}", procIdStr);
+                continue;
+            }
+
+            List<ProcedimentoMaterial> materiais = procedimentoMaterialRepository.findByProcedimentoId(procId);
+            for (ProcedimentoMaterial pm : materiais) {
+                Long produtoId = pm.getMaterial().getId();
+                materialQuantidades.merge(produtoId, pm.getQuantidade(), Integer::sum);
+                materialNomes.putIfAbsent(produtoId, pm.getMaterial().getName());
+            }
+        }
+
+        for (Map.Entry<Long, Integer> entry : materialQuantidades.entrySet()) {
+            Long produtoId = entry.getKey();
+            Integer needed = entry.getValue();
+
+            Produto produto = produtoRepository.findByOrganizacaoIdAndId(orgId, produtoId).orElse(null);
+            if (produto == null) {
+                log.warn("Product {} not found for stock deduction", produtoId);
+                continue;
+            }
+
+            Integer currentQty = produto.getCurrentQuantity() != null ? produto.getCurrentQuantity() : 0;
+            Integer newQty = currentQty - needed;
+            produto.setCurrentQuantity(newQty);
+            produtoRepository.save(produto);
+
+            registrarMovimento(produtoId, orgId, needed, currentQty,
+                    "Consumo por agendamento - " + materialNomes.getOrDefault(produtoId, ""));
+        }
+
+        log.info("Stock deducted for {} materials across {} procedures",
+                materialQuantidades.size(), procedimentosIds.size());
+    }
+
+    private void registrarMovimento(Long produtoId, String orgId, Integer quantidade,
+                                     Integer quantidadeAnterior, String descricao) {
+        MovimentoEstoque mov = new MovimentoEstoque();
+        mov.setProdutoId(produtoId);
+        mov.setTipo("EXIT");
+        mov.setQuantidade(quantidade);
+        mov.setQuantidadeAnterior(quantidadeAnterior);
+        mov.setQuantidadeNova(quantidadeAnterior - quantidade);
+        mov.setDescricao(descricao);
+        mov.setOrganizacaoId(orgId);
+        entityManager.persist(mov);
     }
 
     private AgendamentoDTO toDTO(Agendamento agendamento) {

@@ -29,15 +29,16 @@ async function getJwtToken(sessionId: string): Promise<string | null> {
   }
 }
 
-async function resolveSession(req: NextRequest) {
-  const { data: session } = await auth.getSession();
+export async function GET(req: NextRequest) {
+  try {
+    const { data: session } = await auth.getSession();
 
   if (!session?.user) {
     return { error: "Unauthorized", status: 401 };
   }
 
-  let orgId = (session.session as any)?.activeOrganizationId;
-  const sessionId = session.session?.id;
+    let orgId = (session.session as any)?.activeOrganizationId;
+    const sessionId = session.session?.id;
 
   let token = await getJwtToken(sessionId);
   if (!token) {

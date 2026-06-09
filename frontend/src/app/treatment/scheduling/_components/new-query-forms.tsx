@@ -256,7 +256,9 @@ const handleSalvar = async () => {
         if (!v) resetForm();
       }}
     >
-      <DialogTrigger render={<Button>Agendar Nova Consulta</Button>} />
+      <DialogTrigger>
+        <Button>Agendar Nova Consulta</Button>
+      </DialogTrigger>
 
       <DialogContent className="sm:max-w-[80vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>

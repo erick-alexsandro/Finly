@@ -42,7 +42,7 @@ export function CalendarEventCard({
 
   return (
     <HoverCard>
-      <HoverCardTrigger render={eventSummary} />
+      <HoverCardTrigger>{eventSummary}</HoverCardTrigger>
       <HoverCardContent className="z-[100]">
         <div className="flex justify-between space-x-4">
           <div className="space-y-1">

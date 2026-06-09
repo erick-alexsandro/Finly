@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/navbar";
 import { NeonAuthUIProvider } from '@neondatabase/auth/react';
 import { authClient } from '@/lib/auth/client';
+import { Toaster } from "sonner";
 
 
 // --- CONFIGURAÇÃO DE FONTES ---
@@ -159,6 +160,7 @@ GO_BACK: "Voltar",
           <main className="flex-1 overflow-y-auto">
             {children}
           </main>
+          <Toaster richColors position="bottom-right" />
         </NeonAuthUIProvider>
 
       </body>

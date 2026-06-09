@@ -2,7 +2,9 @@ package com.smilecorp.api.service;
 
 import com.smilecorp.api.dto.ProcedimentoDTO;
 import com.smilecorp.api.entity.Procedimento;
+import com.smilecorp.api.repository.ProcedimentoMaterialRepository;
 import com.smilecorp.api.repository.ProcedimentoRepository;
+import com.smilecorp.api.repository.ProdutoRepository;
 import com.smilecorp.api.util.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +33,12 @@ class ProcedimentoServiceTest {
 
     @Mock
     private ProcedimentoRepository procedimentoRepository;
+
+    @Mock
+    private ProcedimentoMaterialRepository procedimentoMaterialRepository;
+
+    @Mock
+    private ProdutoRepository produtoRepository;
 
     @InjectMocks
     private ProcedimentoService procedimentoService;
@@ -62,7 +70,7 @@ class ProcedimentoServiceTest {
         Procedimento procedimento = createProcedimento();
         when(procedimentoRepository.findByOrganizacaoId(ORG_ID)).thenReturn(List.of(procedimento));
 
-        List<ProcedimentoDTO> result = procedimentoService.listar(null);
+        List<ProcedimentoDTO> result = procedimentoService.listar(null, null, null, null);
 
         assertEquals(1, result.size());
         assertEquals(PROCEDIMENTO_ID.toString(), result.get(0).getId());
@@ -73,10 +81,9 @@ class ProcedimentoServiceTest {
     @Test
     void listar_shouldFilterByNomeWhenProvided() {
         Procedimento procedimento = createProcedimento();
-        when(procedimentoRepository.findByOrganizacaoIdAndNomeContainingIgnoreCase(ORG_ID, "Limpeza"))
-                .thenReturn(List.of(procedimento));
+        when(procedimentoRepository.findByOrganizacaoId(ORG_ID)).thenReturn(List.of(procedimento));
 
-        List<ProcedimentoDTO> result = procedimentoService.listar("Limpeza");
+        List<ProcedimentoDTO> result = procedimentoService.listar("Limpeza", null, null, null);
 
         assertEquals(1, result.size());
         assertEquals("Limpeza", result.get(0).getNome());
@@ -86,7 +93,7 @@ class ProcedimentoServiceTest {
     void listar_shouldReturnEmptyWhenNoneFound() {
         when(procedimentoRepository.findByOrganizacaoId(ORG_ID)).thenReturn(List.of());
 
-        List<ProcedimentoDTO> result = procedimentoService.listar(null);
+        List<ProcedimentoDTO> result = procedimentoService.listar(null, null, null, null);
 
         assertTrue(result.isEmpty());
     }

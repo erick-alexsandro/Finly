@@ -135,3 +135,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 });
   }
 }
+

@@ -2,6 +2,8 @@ package com.smilecorp.api.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Procedimento entity - represents a dental procedure available in the clinic.
@@ -28,8 +30,14 @@ public class Procedimento extends BaseEntity {
     @Column(name = "categoria", length = 100)
     private String categoria;
 
+    @Column(name = "especialidade", length = 255)
+    private String especialidade;
+
     @Column(name = "ativo", nullable = false, columnDefinition = "boolean default true")
     private Boolean ativo;
+
+    @OneToMany(mappedBy = "procedimento", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProcedimentoMaterial> materiais = new ArrayList<>();
 
     public Procedimento() {
     }
@@ -93,11 +101,27 @@ public class Procedimento extends BaseEntity {
         this.categoria = categoria;
     }
 
+    public String getEspecialidade() {
+        return especialidade;
+    }
+
+    public void setEspecialidade(String especialidade) {
+        this.especialidade = especialidade;
+    }
+
     public Boolean getAtivo() {
         return ativo;
     }
 
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public List<ProcedimentoMaterial> getMateriais() {
+        return materiais;
+    }
+
+    public void setMateriais(List<ProcedimentoMaterial> materiais) {
+        this.materiais = materiais;
     }
 }

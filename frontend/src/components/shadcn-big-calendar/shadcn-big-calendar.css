@@ -718,17 +718,24 @@ button.rbc-input::-moz-focus-inner {
   justify-content: center;
 }
 .rbc-event.event-variant-primary {
-  background-color: 240 5.9% 10% !important;
-  color: 240 5.9% 10% !important;
+  --event-bg: var(--primary);
+  --event-color: var(--primary-foreground);
+  --event-border: var(--primary);
 }
 
 .rbc-event.event-variant-secondary {
-  background-color: var(--secondary) !important;
-  color: var(--secondary-foreground) !important;
+  --event-bg: var(--secondary);
+  --event-color: var(--secondary-foreground);
+  --event-border: var(--secondary);
 }
 
 .rbc-event.event-variant-outline {
   background: transparent !important;
   color: var(--primary) !important;
   border: 2px solid var(--primary) !important;
+}
+
+/* Overlapping events: lighter fill so borders/colors show through */
+.rbc-event.rbc-event-overlaps {
+  opacity: 0.88;
 }

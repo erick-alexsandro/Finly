@@ -110,6 +110,66 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const { data: session } = await auth.getSession(req);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let orgId = session.session?.activeOrganizationId;
+    const sessionId = session.session?.id;
+
+    let token = await getJwtToken(sessionId);
+    if (!token) {
+      console.warn("[agendamentos PUT] JWT token unavailable, using dev-mode token");
+      token = "dev-mode-token";
+    }
+
+    if (!orgId) {
+      try {
+        const orgs = await getOrganizations(session.user?.id);
+        if (orgs.length > 0) orgId = orgs[0].id;
+      } catch (dbError) {
+        console.error("[agendamentos PUT] Error fetching org:", dbError);
+      }
+    }
+
+    if (!orgId) {
+      return NextResponse.json({ error: "No active organization" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+    }
+
+    const body = await req.json();
+    const backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/agendamentos/${id}`;
+
+    const res = await fetch(backendUrl, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-Organization-Id": orgId,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      return NextResponse.json(await res.json());
+    } else {
+      const errorText = await res.text();
+      return NextResponse.json({ error: "Backend error", status: res.status, details: errorText.slice(0, 500) }, { status: res.status });
+    }
+  } catch (error) {
+    console.error("[agendamentos PUT]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { data: session } = await auth.getSession();

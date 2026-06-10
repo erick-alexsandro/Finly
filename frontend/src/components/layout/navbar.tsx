@@ -212,11 +212,9 @@ function MobileSheet({ user, clinic, onSignOut }: { user?: any; clinic?: any; on
       </SheetTrigger>
       <SheetContent side="left" className="flex w-80 flex-col p-0">
         <SheetHeader className="border-b px-4 py-3">
-          <SheetTitle asChild>
-            <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+          <SheetTitle render={<Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
               <Logo />
-            </Link>
-          </SheetTitle>
+            </Link>} />
           <div className="mt-2">
             <ClinicBadge name={clinic?.name} />
           </div>

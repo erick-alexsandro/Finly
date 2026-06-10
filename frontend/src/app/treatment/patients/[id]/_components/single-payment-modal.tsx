@@ -19,6 +19,15 @@ import {
 } from "@/components/ui/select";
 import { DollarSign } from "lucide-react";
 
+export interface PaymentData {
+  nome: string;
+  data: string;
+  valorTotal: number;
+  formaPagamento: string;
+  parcelas?: number;
+  status: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -86,7 +95,7 @@ export function SinglePaymentModal({ open, onOpenChange, onConfirm, defaultNome,
           </div>
           <div className="grid gap-2">
             <Label>Forma de Pagamento</Label>
-            <Select value={formaPagamento} onValueChange={setFormaPagamento}>
+            <Select value={formaPagamento} onValueChange={(v) => setFormaPagamento(v ?? '')}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
@@ -102,7 +111,7 @@ export function SinglePaymentModal({ open, onOpenChange, onConfirm, defaultNome,
           </div>
           <div className="grid gap-2">
             <Label>Status</Label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={(v) => setStatus(v ?? '')}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>

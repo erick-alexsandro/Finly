@@ -6,6 +6,8 @@ import com.smilecorp.api.entity.Paciente;
 import com.smilecorp.api.entity.Profissional;
 import com.smilecorp.api.repository.AgendamentoRepository;
 import com.smilecorp.api.repository.PacienteRepository;
+import com.smilecorp.api.repository.ProcedimentoMaterialRepository;
+import com.smilecorp.api.repository.ProdutoRepository;
 import com.smilecorp.api.repository.ProfissionalRepository;
 import com.smilecorp.api.util.TenantContext;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +42,10 @@ class AgendamentoServiceTest {
     private PacienteRepository pacienteRepository;
     @Mock
     private ProfissionalRepository profissionalRepository;
+    @Mock
+    private ProcedimentoMaterialRepository procedimentoMaterialRepository;
+    @Mock
+    private ProdutoRepository produtoRepository;
 
     @InjectMocks
     private AgendamentoService agendamentoService;

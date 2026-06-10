@@ -19,10 +19,10 @@ async function getJwtToken(sessionId: string): Promise<string | null> {
   }
 }
 
-async function getSessionData(req: NextRequest) {
-  const { data: session } = await auth.getSession(req);
+async function getSessionData() {
+  const { data: session } = await auth.getSession();
   if (session?.user) {
-    let orgId = session.session?.activeOrganizationId;
+    let orgId = (session.session as any)?.activeOrganizationId;
     const sessionId = session.session?.id;
     let token = await getJwtToken(sessionId);
     if (!token) {
@@ -48,7 +48,7 @@ function backendUrl(path: string): string {
 }
 
 async function forward(req: NextRequest, method: string, path: string) {
-  const session = await getSessionData(req);
+  const session = await getSessionData();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

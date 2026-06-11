@@ -83,7 +83,7 @@ const navItems: NavItem[] = [
   {
     title: "Financeiro",
     children: [
-      { title: "Fluxo de Caixa",              href: "/financial/cashflow",           description: "Acompanhe as entradas e saídas financeiras",       icon: Coins },
+      { title: "Dashboard Financeiro",        href: "/financial/dashboard-financeiro", description: "Indicadores, gráficos e análises financeiras", icon: Coins },
       { title: "Controle Financeiro",   href: "/financial/budget-tracking",   description: "Acompanhe receitas, despesas e lançamentos fixos",    icon: BanknoteArrowUp },
     ],
   },

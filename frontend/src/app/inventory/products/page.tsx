@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { RoleGate } from "@/components/auth/role-gate";
+import { ROLES } from "@/lib/auth/organization";
 import { ProductCard } from "./components/product-card";
 import { ProductModal } from "./components/product-modal";
 import { RestockModal } from "./components/restock-modal";
@@ -68,6 +70,7 @@ export default function InventoryPage() {
   });
 
   return (
+    <RoleGate allowedRoles={[ROLES.OWNER, ROLES.ADMIN, ROLES.RECEPTIONIST]}>
     <div className="min-h-screen bg-slate-50 p-8">
       <header className="flex justify-between items-end mb-8 max-w-7xl mx-auto">
         <div className="text-left">
@@ -183,5 +186,6 @@ export default function InventoryPage() {
       <WithdrawModal open={showWithdraw} onOpenChange={setShowWithdraw} onSuccess={fetchProducts} />
       <AdjustModal open={showAdjust} onOpenChange={setShowAdjust} onSuccess={fetchProducts} />
     </div>
+    </RoleGate>
   );
 }

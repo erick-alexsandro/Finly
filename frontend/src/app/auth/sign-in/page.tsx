@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { authClient } from '@/lib/auth/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,8 @@ export default function SignInPage() {
         setError(error.message || 'E-mail ou senha inválidos.');
         return;
       }
-      router.replace('/');
+      const params = new URLSearchParams(window.location.search);
+      router.replace(params.get('callbackURL') || '/');
     } catch (e: any) {
       setError(e?.message || 'Erro ao entrar. Tente novamente.');
     } finally {

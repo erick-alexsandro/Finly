@@ -6,6 +6,7 @@ import { ProcedureTable } from "./_components/procedure-table";
 import { ProcedimentoCustos } from "./_components/procedure-custos";
 import { ProcedimentoSimulador } from "./_components/procedure-simulador";
 import { ProcedimentoTaxasMaquininha } from "./_components/procedure-taxas-maquininha";
+import { AdminOrOwnerOnly } from "@/components/auth/role-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -102,6 +103,7 @@ export default function ProceduresPage() {
   };
 
   return (
+    <AdminOrOwnerOnly>
     <div className="min-h-screen bg-slate-50 p-8">
       <header className="flex justify-between items-end mb-6 max-w-7xl mx-auto">
         <div className="text-left">
@@ -250,5 +252,6 @@ export default function ProceduresPage() {
         </div>
       )}
     </div>
+    </AdminOrOwnerOnly>
   );
 }

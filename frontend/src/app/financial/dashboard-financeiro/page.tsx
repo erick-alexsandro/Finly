@@ -12,6 +12,7 @@ import {
   ChartPie, ChartLine, Eye, ArrowRightLeft, BadgeCheck, Ban,
   AlertCircle, Sparkles, Scale, Gauge, CircleDollarSign
 } from "lucide-react";
+import { AdminOrOwnerOnly } from "@/components/auth/role-gate";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -253,6 +254,7 @@ export default function DashboardFinanceiroPage() {
   const mesAtual = MESES.find((m) => m.value === selectedMonth);
 
   return (
+    <AdminOrOwnerOnly>
     <main className="flex-1 space-y-6 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
@@ -883,5 +885,6 @@ export default function DashboardFinanceiroPage() {
         </Card>
       </div>
     </main>
+    </AdminOrOwnerOnly>
   );
 }

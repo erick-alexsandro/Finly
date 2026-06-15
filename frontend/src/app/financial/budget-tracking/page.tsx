@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { format, getMonth, getYear, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TrendingUp, TrendingDown, Repeat, Plus, Search, Edit2, Trash2, ChevronLeft, ChevronRight, DollarSign, PiggyBank, CalendarDays, FileDown } from "lucide-react";
+import { AdminOrOwnerOnly } from "@/components/auth/role-gate";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -366,6 +367,7 @@ export default function BudgetTrackingPage() {
   };
 
   return (
+    <AdminOrOwnerOnly>
     <main className="flex-1 space-y-6 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
@@ -884,5 +886,6 @@ export default function BudgetTrackingPage() {
         </DialogContent>
       </Dialog>
     </main>
+    </AdminOrOwnerOnly>
   );
 }

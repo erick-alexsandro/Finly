@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { RoleGate } from "@/components/auth/role-gate";
+import { ROLES } from "@/lib/auth/organization";
 import { SupplierModal } from "./_components/supplier-modal";
 import { SupplierTable } from "./_components/supplier-table";
 import { Input } from "@/components/ui/input";
@@ -71,6 +73,7 @@ export default function SuppliersPage() {
   }, [suppliers, searchTerm, statusFilter]);
 
   return (
+    <RoleGate allowedRoles={[ROLES.OWNER, ROLES.ADMIN, ROLES.RECEPTIONIST]}>
     <div className="min-h-screen bg-slate-50 p-8">
       <header className="flex justify-between items-end mb-8 max-w-7xl mx-auto">
         <div className="text-left">
@@ -124,5 +127,6 @@ export default function SuppliersPage() {
         )}
       </div>
     </div>
+    </RoleGate>
   );
 }

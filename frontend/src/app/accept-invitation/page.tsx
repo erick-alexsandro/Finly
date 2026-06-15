@@ -63,7 +63,7 @@ function AcceptInvitationContent() {
     }
 
     setStatus('done');
-    setTimeout(() => router.push('/dashboard'), 2000);
+    setTimeout(() => router.push('/treatment/scheduling'), 2000);
   };
 
   const handleSignUpAndAccept = async (e: React.FormEvent) => {

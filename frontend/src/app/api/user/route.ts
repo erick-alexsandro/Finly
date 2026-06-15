@@ -15,7 +15,7 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/server';
-import { getOrganizations } from '@/lib/db';
+import { getOrganizations, getUserRoleInOrganization } from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
@@ -58,7 +58,13 @@ export async function GET(request: Request) {
       // Continue with empty organizations list
     }
 
-    return NextResponse.json({ user, clinic, clinics });
+    const orgId = clinic?.id;
+    let role: string | null = null;
+    if (user?.id && orgId) {
+      role = await getUserRoleInOrganization(user.id, orgId);
+    }
+
+    return NextResponse.json({ user, clinic, clinics, role });
   } catch (error) {
     console.error('[/api/user]', error);
     return NextResponse.json({ user: null, clinic: null, clinics: [] }, { status: 500 });

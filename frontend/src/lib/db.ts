@@ -36,3 +36,16 @@ export async function getOrganizations(userId: string) {
     throw error;
   }
 }
+
+export async function getUserRoleInOrganization(userId: string, orgId: string): Promise<string | null> {
+  try {
+    const result = await query(
+      `SELECT role FROM neon_auth.member WHERE "userId" = $1 AND "organizationId" = $2`,
+      [userId, orgId]
+    );
+    return result.rows[0]?.role ?? null;
+  } catch (error) {
+    console.error('[db.getUserRoleInOrganization] Error:', error);
+    return null;
+  }
+}

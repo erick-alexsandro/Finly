@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useId, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
@@ -14,8 +13,7 @@ import {
   Calendar,
   Users,
   CreditCard,
-  SearchIcon,
-  LoaderCircleIcon,
+
   Coins,
   BanknoteArrowUp,
   BanknoteArrowDown,
@@ -71,22 +69,20 @@ interface NavItem {
 
 // ─── Nav data ─────────────────────────────────────────────────────────────────
 
-const navItems: NavItem[] = [
+const ALL_NAV_ITEMS: NavItem[] = [
   {
     title: "Atendimentos",
     children: [
       { title: "Agenda",        href: "/treatment/scheduling", description: "Acompanhe os agendamentos e horários dos clientes", icon: Calendar },
       { title: "Pacientes",     href: "/treatment/patients",             description: "Gerencie as informações dos pacientes",           icon: Users },
-      { title: "Pontuários",    href: "/treatment/points",               description: "Gerencie os pontos dos pacientes",               icon: ClipboardPlus },
       { title: "Procedimentos", href: "/treatment/procedures",           description: "Visualize e altere os procedimentos",            icon: SquareActivity },
     ],
   },
   {
     title: "Financeiro",
     children: [
-      { title: "Fluxo de Caixa",     href: "/financial/cashflow",           description: "Acompanhe as entradas e saídas financeiras",       icon: Coins },
-      { title: "Contas a Pagar",     href: "/financial/accounts-payable",   description: "Gerencie as contas a pagar e seus vencimentos",    icon: BanknoteArrowUp },
-      { title: "Contas a Receber",   href: "/financial/accounts-receivable",description: "Gerencie as contas a receber e seus vencimentos",  icon: BanknoteArrowDown },
+      { title: "Dashboard Financeiro",        href: "/financial/dashboard-financeiro", description: "Indicadores, gráficos e análises financeiras", icon: Coins },
+      { title: "Controle Financeiro",   href: "/financial/budget-tracking",   description: "Acompanhe receitas, despesas e lançamentos fixos",    icon: BanknoteArrowUp },
     ],
   },
   {
@@ -97,6 +93,39 @@ const navItems: NavItem[] = [
     ],
   },
 ];
+
+function getNavItems(role?: string | null): NavItem[] {
+  if (role === 'receptionist') {
+    return [
+      {
+        title: "Atendimentos",
+        children: [
+          { title: "Agenda",   href: "/treatment/scheduling", description: "Acompanhe os agendamentos e horários dos clientes", icon: Calendar },
+          { title: "Pacientes", href: "/treatment/patients",  description: "Gerencie as informações dos pacientes",           icon: Users },
+        ],
+      },
+      {
+        title: "Estoque",
+        children: [
+          { title: "Produtos e Insumos", href: "/inventory/products", description: "Gerencie os produtos e insumos do estoque", icon: Package },
+          { title: "Fornecedores", href: "/inventory/suppliers", description: "Gerencie as informações dos fornecedores", icon: Truck },
+        ],
+      },
+    ];
+  }
+  if (role === 'doctor') {
+    return [
+      {
+        title: "Atendimentos",
+        children: [
+          { title: "Agenda",   href: "/treatment/scheduling", description: "Acompanhe os agendamentos e horários dos clientes", icon: Calendar },
+          { title: "Pacientes", href: "/treatment/patients",  description: "Gerencie as informações dos pacientes",           icon: Users },
+        ],
+      },
+    ];
+  }
+  return ALL_NAV_ITEMS;
+}
 
 // ─── ListItem ─────────────────────────────────────────────────────────────────
 
@@ -127,43 +156,7 @@ const ListItem = React.forwardRef<
 ));
 ListItem.displayName = "ListItem";
 
-// ─── SearchBar ────────────────────────────────────────────────────────────────
 
-const SearchBar = () => {
-  const [value, setValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const id = useId();
-
-  useEffect(() => {
-    if (!value) { setIsLoading(false); return; }
-    setIsLoading(true);
-    const t = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(t);
-  }, [value]);
-
-  return (
-    <div className="w-full max-w-xs space-y-2 px-3">
-      <div className="relative">
-        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
-          <SearchIcon className="size-4" />
-        </div>
-        <Input
-          id={id}
-          type="search"
-          placeholder="Pesquisar..."
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="peer px-9 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none"
-        />
-        {isLoading && (
-          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center justify-center pr-3">
-            <LoaderCircleIcon className="size-4 animate-spin" />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 // ─── Mobile Nav ───────────────────────────────────────────────────────────────
 
@@ -199,7 +192,7 @@ function MobileNavSection({ item, onClose }: { item: NavItem; onClose: () => voi
   );
 }
 
-function MobileSheet({ user, clinic, onSignOut }: { user?: any; clinic?: any; onSignOut: () => void }) {
+function MobileSheet({ user, clinic, onSignOut, role, navItems }: { user?: any; clinic?: any; onSignOut: () => void; role?: string | null; navItems: NavItem[] }) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -233,10 +226,12 @@ function MobileSheet({ user, clinic, onSignOut }: { user?: any; clinic?: any; on
 
           <div className="space-y-1">
             <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Conta</p>
-            <Link href="/equipe" onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-              <UserPlus className="h-4 w-4" /> Gerenciar Equipe
-            </Link>
+            {role !== 'receptionist' && role !== 'doctor' && (
+              <Link href="/equipe" onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                <UserPlus className="h-4 w-4" /> Gerenciar Equipe
+              </Link>
+            )}
           </div>
         </ScrollArea>
 
@@ -297,6 +292,7 @@ export function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [clinic, setClinic] = useState<any>(null);
+  const [role, setRole] = useState<string | null>(null);
 
   const loadUser = async () => {
     try {
@@ -305,10 +301,13 @@ export function Navbar() {
       const data = await res.json();
       setUser(data.user);
       setClinic(data.clinic);
+      setRole(data.role ?? null);
     } catch (e) {
       console.error("Navbar loadUser error:", e);
     }
   };
+
+  const navItems = getNavItems(role);
 
   useEffect(() => {
     // Refresh user data when pathname changes (navigation)
@@ -342,7 +341,7 @@ export function Navbar() {
         <div className="mx-auto flex h-14 items-center gap-4">
 
           {/* Mobile hamburger */}
-          <MobileSheet user={user} clinic={clinic} onSignOut={handleSignOut} />
+          <MobileSheet user={user} clinic={clinic} role={role} navItems={navItems} onSignOut={handleSignOut} />
 
           {/* Logo */}
           <Link href="/" className="mr-2 flex items-center">
@@ -389,16 +388,22 @@ export function Navbar() {
           {/* Right side */}
           <div className="ml-auto flex items-center gap-1">
             {/* Manage team link */}
-            <Link href="/equipe">
-              <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden lg:inline">Equipe</span>
-              </Button>
-            </Link>
+            {role !== 'receptionist' && role !== 'doctor' && (
+              <Link href="/equipe">
+                <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+                  <UserPlus className="h-4 w-4" />
+                  <span className="hidden lg:inline">Equipe</span>
+                </Button>
+              </Link>
+            )}
 
-            <SearchBar />
-            <Separator orientation="vertical" className="" />
-            <UserButton size="icon" />
+            <UserButton
+              size="icon"
+              disableDefaultLinks
+              additionalLinks={[
+                { href: '/settings', icon: <Settings className="h-4 w-4" />, label: 'Configurações' },
+              ]}
+            />
           </div>
         </div>
       </div>

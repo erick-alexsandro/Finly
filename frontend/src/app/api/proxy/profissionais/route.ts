@@ -1,69 +1,10 @@
-import { auth } from "@/lib/auth/server";
 import { NextRequest, NextResponse } from "next/server";
-import { getOrganizations } from "@/lib/db";
-
-async function getJwtToken(sessionId: string): Promise<string | null> {
-  try {
-    const neonAuthUrl = process.env.NEON_AUTH_BASE_URL;
-    if (!neonAuthUrl) {
-      console.error("[getJwtToken] NEON_AUTH_BASE_URL not set");
-      return null;
-    }
-
-    const response = await fetch(`${neonAuthUrl}/api/auth/session`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId }),
-    });
-
-    if (!response.ok) {
-      console.error("[getJwtToken] Failed:", response.status);
-      return null;
-    }
-
-    const data = await response.json();
-    return data?.token || null;
-  } catch (error) {
-    console.error("[getJwtToken] Error:", error);
-    return null;
-  }
-}
+import { getSessionContext } from "@/lib/proxy-helper";
 
 export async function GET(req: NextRequest) {
   try {
-    const { data: session } = await auth.getSession();
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    let orgId = (session.session as any)?.activeOrganizationId;
-    const sessionId = session.session?.id;
-
-    let token = await getJwtToken(sessionId);
-    
-    if (!token) {
-      console.warn("[profissionais GET] JWT token unavailable, using dev-mode token");
-      token = "dev-mode-token";
-    }
-
-    if (!orgId) {
-      try {
-        const orgs = await getOrganizations(session.user?.id);
-        if (orgs.length > 0) {
-          orgId = orgs[0].id;
-        }
-      } catch (dbError) {
-        console.error("[profissionais] Error fetching org:", dbError);
-      }
-    }
-
-    if (!orgId) {
-      return NextResponse.json(
-        { error: "No active organization" },
-        { status: 403 }
-      );
-    }
+    const ctx = await getSessionContext();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
     const params = new URLSearchParams();
@@ -74,8 +15,9 @@ export async function GET(req: NextRequest) {
 
     const res = await fetch(backendUrl, {
       headers: {
-        Authorization: `Bearer ${token}`,
-        "X-Organization-Id": orgId,
+        "X-Proxy-Secret": process.env.PROXY_SECRET || "",
+        "X-User-Id": ctx.userId,
+        "X-Organization-Id": ctx.orgId,
         "Content-Type": "application/json",
       },
     });
@@ -94,4 +36,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

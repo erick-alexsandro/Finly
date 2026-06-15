@@ -1,54 +1,9 @@
-import { auth } from "@/lib/auth/server";
 import { NextRequest, NextResponse } from "next/server";
-import { getOrganizations } from "@/lib/db";
-
-async function getJwtToken(sessionId: string): Promise<string | null> {
-  try {
-    const neonAuthUrl = process.env.NEON_AUTH_BASE_URL;
-    if (!neonAuthUrl) return null;
-    const response = await fetch(`${neonAuthUrl}/api/auth/session`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId }),
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data?.token || null;
-  } catch (error) {
-    console.error("[getJwtToken] Error:", error);
-    return null;
-  }
-}
-
-async function getSessionContext(req: NextRequest) {
-  const { data: session } = await auth.getSession();
-  if (!session?.user) return null;
-
-  let orgId = (session.session as any)?.activeOrganizationId;
-  const sessionId = session.session?.id;
-
-  let token = await getJwtToken(sessionId);
-  if (!token) {
-    console.warn("[pagamentos-paciente] JWT token unavailable, using dev-mode token");
-    token = "dev-mode-token";
-  }
-
-  if (!orgId) {
-    try {
-      const orgs = await getOrganizations(session.user?.id);
-      if (orgs.length > 0) orgId = orgs[0].id;
-    } catch (dbError) {
-      console.error("[pagamentos-paciente] Error fetching org:", dbError);
-    }
-  }
-
-  if (!orgId) return null;
-  return { orgId, token };
-}
+import { getSessionContext } from "@/lib/proxy-helper";
 
 export async function GET(req: NextRequest) {
   try {
-    const ctx = await getSessionContext(req);
+    const ctx = await getSessionContext();
     if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
@@ -59,7 +14,8 @@ export async function GET(req: NextRequest) {
 
     const res = await fetch(backendUrl, {
       headers: {
-        Authorization: `Bearer ${ctx.token}`,
+        "X-Proxy-Secret": process.env.PROXY_SECRET || "",
+        "X-User-Id": ctx.userId,
         "X-Organization-Id": ctx.orgId,
         "Content-Type": "application/json",
       },
@@ -75,7 +31,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const ctx = await getSessionContext(req);
+    const ctx = await getSessionContext();
     if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
@@ -84,7 +40,8 @@ export async function POST(req: NextRequest) {
     const res = await fetch(backendUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${ctx.token}`,
+        "X-Proxy-Secret": process.env.PROXY_SECRET || "",
+        "X-User-Id": ctx.userId,
         "X-Organization-Id": ctx.orgId,
         "Content-Type": "application/json",
       },
@@ -102,7 +59,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const ctx = await getSessionContext(req);
+    const ctx = await getSessionContext();
     if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
@@ -115,7 +72,8 @@ export async function PUT(req: NextRequest) {
     const res = await fetch(backendUrl, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${ctx.token}`,
+        "X-Proxy-Secret": process.env.PROXY_SECRET || "",
+        "X-User-Id": ctx.userId,
         "X-Organization-Id": ctx.orgId,
         "Content-Type": "application/json",
       },
@@ -133,7 +91,7 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const ctx = await getSessionContext(req);
+    const ctx = await getSessionContext();
     if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
@@ -145,7 +103,8 @@ export async function DELETE(req: NextRequest) {
     const res = await fetch(backendUrl, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${ctx.token}`,
+        "X-Proxy-Secret": process.env.PROXY_SECRET || "",
+        "X-User-Id": ctx.userId,
         "X-Organization-Id": ctx.orgId,
         "Content-Type": "application/json",
       },

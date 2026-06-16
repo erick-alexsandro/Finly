@@ -108,7 +108,8 @@ public class SchedulingSteps {
                 createdAppointment.getStatus(),
                 null,
                 null,
-                false,
+                null,
+                Boolean.FALSE,
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Save } from "lucide-react";
+import { toast } from "sonner";
 
 interface SupplierModalProps {
   trigger?: React.ReactNode;
@@ -193,7 +194,7 @@ export function SupplierModal({
       });
 
       if (response.ok) {
-        alert(
+        toast.success(
           isEdit
             ? "Fornecedor atualizado com sucesso!"
             : "Fornecedor cadastrado com sucesso!"
@@ -202,11 +203,11 @@ export function SupplierModal({
         setOpen(false);
       } else {
         const errorData = await response.json();
-        alert(`Erro ao salvar fornecedor: ${errorData?.error || "Erro desconhecido"}`);
+        toast.error(`Erro ao salvar fornecedor: ${errorData?.error || "Erro desconhecido"}`);
       }
     } catch (error) {
       console.error("Erro:", error);
-      alert("Erro de conexão com o servidor");
+      toast.error("Erro de conexão com o servidor");
     } finally {
       setLoading(false);
     }
@@ -223,16 +224,16 @@ export function SupplierModal({
       );
 
       if (response.ok || response.status === 204) {
-        alert("Fornecedor removido com sucesso!");
+        toast.success("Fornecedor removido com sucesso!");
         onSuccess?.();
         setOpen(false);
       } else {
         const errorData = await response.json();
-        alert(`Erro ao excluir fornecedor: ${errorData?.error || "Erro desconhecido"}`);
+        toast.error(`Erro ao excluir fornecedor: ${errorData?.error || "Erro desconhecido"}`);
       }
     } catch (error) {
       console.error("Erro:", error);
-      alert("Erro de conexão");
+      toast.error("Erro de conexão");
     } finally {
       setLoading(false);
     }
@@ -255,19 +256,15 @@ export function SupplierModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        className={
-          isEdit
-            ? ""
-            : "fixed bottom-8 right-8 h-14 w-14 rounded-full bg-[#1E293B] flex items-center justify-center text-white shadow-xl z-50 hover:bg-[#0F172A] transition-all active:scale-95"
-        }
-      >
-        {isEdit ? (
-          trigger
-        ) : (
+      {trigger ? (
+        <DialogTrigger>
+          {trigger}
+        </DialogTrigger>
+      ) : (
+        <DialogTrigger className="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-[#1E293B] flex items-center justify-center text-white shadow-xl z-50 hover:bg-[#0F172A] transition-all active:scale-95">
           <Plus className="h-7 w-7" strokeWidth={3} />
-        )}
-      </DialogTrigger>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

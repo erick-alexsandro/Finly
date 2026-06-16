@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -38,6 +39,7 @@ import { ProntuarioModal } from "./_components/prontuario-modal";
 import { SinglePaymentModal } from "./_components/single-payment-modal";
 import { InstallmentPaymentModal } from "./_components/installment-payment-modal";
 import { EditPaymentModal } from "./_components/edit-payment-modal";
+import { NotReceptionist } from "@/components/auth/role-gate";
 
 interface Patient {
   id: string;
@@ -277,6 +279,29 @@ export default function PatientProfilePage() {
   const openEditModal = (apt: any) => {
     setSelectedAppointment(apt);
     setShowEditModal(true);
+  };
+
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAppointment = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const res = await apiFetch(`/api/proxy/agendamentos?id=${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok || res.status === 204) {
+        setAppointments((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+        setShowDeleteConfirm(false);
+        setDeleteTarget(null);
+      }
+    } catch (err) {
+      console.error("Erro ao excluir agendamento:", err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const openProntuarioModal = (apt: any) => {
@@ -656,7 +681,7 @@ export default function PatientProfilePage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Clock className="h-3.5 w-3.5" />
-                              {new Date(apt.data + "T00:00:00").toLocaleDateString("pt-BR")} • {apt.horaInicio} - {apt.horaFim}
+                              {new Date(apt.data).toLocaleDateString("pt-BR")} • {apt.horaInicio} - {apt.horaFim}
                             </div>
                             <div className="mt-1 flex items-center gap-2 text-sm">
                               <Stethoscope className="h-3.5 w-3.5 text-muted-foreground" />
@@ -679,8 +704,13 @@ export default function PatientProfilePage() {
                               {apt.status || "agendado"}
                             </Badge>
                             <div className="flex gap-1 mt-1">
-                              <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => openEditModal(apt)} title="Editar">
-                                <Pen className="h-3.5 w-3.5" />
+                              <NotReceptionist>
+                                <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => openEditModal(apt)} title="Editar">
+                                  <Pen className="h-3.5 w-3.5" />
+                                </Button>
+                              </NotReceptionist>
+                              <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:text-red-700" onClick={() => { setDeleteTarget(apt); setShowDeleteConfirm(true); }} title="Excluir">
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                               {apt.status !== "confirmado" && (
                                 <Button variant="ghost" size="sm" className="h-7 px-2 text-green-600" onClick={() => handleConfirmAppointment(apt)} title="Confirmar">
@@ -720,6 +750,7 @@ export default function PatientProfilePage() {
                     onSuccess={refreshAppointments}
                   />
                 )}
+                <NotReceptionist>
                 {selectedAppointment && (
                   <PatientAppointmentEditModal
                     open={showEditModal}
@@ -728,6 +759,24 @@ export default function PatientProfilePage() {
                     onSuccess={refreshAppointments}
                   />
                 )}
+                </NotReceptionist>
+
+                <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                  <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                      <DialogTitle>Excluir agendamento</DialogTitle>
+                      <DialogDescription>
+                        Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
+                      <Button variant="destructive" onClick={handleDeleteAppointment} disabled={isDeleting}>
+                        {isDeleting ? "Excluindo…" : "Excluir"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </TabsPanel>
 
               <TabsPanel value="prontuario">
@@ -786,10 +835,10 @@ export default function PatientProfilePage() {
                         <TableBody>
                           {sorted.map((r: any) => (
                             <TableRow key={r.id}>
-                              <TableCell className="whitespace-nowrap">{r.data ? new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR") : "-"}</TableCell>
+                              <TableCell className="whitespace-nowrap">{r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "-"}</TableCell>
                               <TableCell className="truncate">{r.profissionalId ? profissionaisMap[String(r.profissionalId)] || r.profissionalId.slice(0, 8) + "…" : "-"}</TableCell>
                               <TableCell>{r.dente || "-"}</TableCell>
-                              <TableCell className="break-words">{r.procedimentosExecutados || "-"}</TableCell>
+                              <TableCell className="break-words">{r.procedimentosExecutados?.length ? r.procedimentosExecutados.map((id: string) => procedimentosMap[String(id)] || `ID ${id}`).join(", ") : "-"}</TableCell>
                               <TableCell className="break-words">{r.conteudo || "-"}</TableCell>
                               <TableCell className="break-words">{r.secao || "-"}</TableCell>
                               <TableCell className="break-words">{r.detalhesProximaConsulta || "-"}</TableCell>
@@ -842,7 +891,7 @@ export default function PatientProfilePage() {
                       <TableBody>
                         {payments.map((p: any) => (
                           <TableRow key={p.id}>
-                            <TableCell className="whitespace-nowrap">{new Date(p.data + "T00:00:00").toLocaleDateString("pt-BR")}</TableCell>
+                            <TableCell className="whitespace-nowrap">{new Date(p.data).toLocaleDateString("pt-BR")}</TableCell>
                             <TableCell>{p.nome}</TableCell>
                             <TableCell>R$ {Number(p.valorTotal).toFixed(2)}</TableCell>
                             <TableCell>{p.parcelas ? p.parcelas + "x" : "À vista"}</TableCell>

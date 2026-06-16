@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ public class ProntuarioService {
         prontuario.setData(dto.getData());
         prontuario.setProfissionalId(dto.getProfissionalId());
         prontuario.setDente(dto.getDente());
-        prontuario.setProcedimentosExecutados(dto.getProcedimentosExecutados());
+        if (dto.getProcedimentosExecutados() != null) prontuario.setProcedimentosExecutados(new ArrayList<>(dto.getProcedimentosExecutados()));
         prontuario.setSecao(dto.getSecao());
         prontuario.setDetalhesProximaConsulta(dto.getDetalhesProximaConsulta());
         prontuario.setObservacoes(dto.getObservacoes());
@@ -69,7 +70,7 @@ public class ProntuarioService {
         if (dto.getData() != null) prontuario.setData(dto.getData());
         if (dto.getProfissionalId() != null) prontuario.setProfissionalId(dto.getProfissionalId());
         if (dto.getDente() != null) prontuario.setDente(dto.getDente());
-        if (dto.getProcedimentosExecutados() != null) prontuario.setProcedimentosExecutados(dto.getProcedimentosExecutados());
+        if (dto.getProcedimentosExecutados() != null) prontuario.setProcedimentosExecutados(new ArrayList<>(dto.getProcedimentosExecutados()));
         if (dto.getSecao() != null) prontuario.setSecao(dto.getSecao());
         if (dto.getDetalhesProximaConsulta() != null) prontuario.setDetalhesProximaConsulta(dto.getDetalhesProximaConsulta());
         if (dto.getObservacoes() != null) prontuario.setObservacoes(dto.getObservacoes());

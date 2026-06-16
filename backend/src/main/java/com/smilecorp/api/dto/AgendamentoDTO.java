@@ -1,5 +1,6 @@
 package com.smilecorp.api.dto;
 
+import com.smilecorp.api.entity.MaterialAgendamento;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class AgendamentoDTO {
     private String profissionalNome;
     private String status;
     private List<String> procedimentosIds;
+    private List<MaterialAgendamento> materiais;
     private String observacoes;
     private Boolean confirmado;
     private LocalDateTime criadoEm;
@@ -27,8 +29,8 @@ public class AgendamentoDTO {
     public AgendamentoDTO(String id, LocalDateTime data, String horaInicio, String horaFim,
                          String pacienteId, String pacienteNome, String profissionalId,
                          String profissionalNome, String status, List<String> procedimentosIds,
-                         String observacoes, Boolean confirmado, LocalDateTime criadoEm,
-                         LocalDateTime atualizadoEm) {
+                         List<MaterialAgendamento> materiais, String observacoes, Boolean confirmado,
+                         LocalDateTime criadoEm, LocalDateTime atualizadoEm) {
         this.id = id;
         this.data = data;
         this.horaInicio = horaInicio;
@@ -39,6 +41,7 @@ public class AgendamentoDTO {
         this.profissionalNome = profissionalNome;
         this.status = status;
         this.procedimentosIds = procedimentosIds;
+        this.materiais = materiais;
         this.observacoes = observacoes;
         this.confirmado = confirmado;
         this.criadoEm = criadoEm;
@@ -140,6 +143,14 @@ public class AgendamentoDTO {
 
     public void setProcedimentosIds(List<String> procedimentosIds) {
         this.procedimentosIds = procedimentosIds;
+    }
+
+    public List<MaterialAgendamento> getMateriais() {
+        return materiais;
+    }
+
+    public void setMateriais(List<MaterialAgendamento> materiais) {
+        this.materiais = materiais;
     }
 
     public String getObservacoes() {

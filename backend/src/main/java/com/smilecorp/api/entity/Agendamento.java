@@ -52,6 +52,11 @@ public class Agendamento extends BaseEntity {
     @Column(name = "procedimentos_ids", columnDefinition = "jsonb")
     private List<String> procedimentosIds = new ArrayList<>();
 
+    // Direct materials with custom quantities
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "materiais", columnDefinition = "jsonb")
+    private List<MaterialAgendamento> materiais = new ArrayList<>();
+
     @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
 
@@ -149,6 +154,14 @@ public class Agendamento extends BaseEntity {
 
     public void setProcedimentosIds(List<String> procedimentosIds) {
         this.procedimentosIds = procedimentosIds;
+    }
+
+    public List<MaterialAgendamento> getMateriais() {
+        return materiais;
+    }
+
+    public void setMateriais(List<MaterialAgendamento> materiais) {
+        this.materiais = materiais;
     }
 
     public String getObservacoes() {

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import { checkMaterialStock } from "@/lib/stock";
 import { StockWarningDialog } from "@/components/stock-warning-dialog";
 import type { StockWarning } from "@/lib/stock";
@@ -60,7 +60,6 @@ export function NewQueryForms({ onSuccess }: Props) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [saved, setSaved] = useState(false);
   const [stockWarnings, setStockWarnings] = useState<StockWarning[]>([]);
   const [showStockWarning, setShowStockWarning] = useState(false);
 
@@ -98,7 +97,6 @@ export function NewQueryForms({ onSuccess }: Props) {
     setSugestoesProfissionais([]);
     setSugestoesProcedimentos([]);
     setSaveError("");
-    setSaved(false);
   };
 
   // ── Patient autocomplete (using relative path like calendar) ──────────────
@@ -211,7 +209,6 @@ const handleSalvar = async () => {
     });
 
     if (res.ok) {
-      setSaved(true);
       onSuccess?.();
       const allMateriais = procedimentosSelecionados.flatMap(
         (p: any) => p.materiais || []
@@ -219,15 +216,15 @@ const handleSalvar = async () => {
       if (allMateriais.length > 0) {
         const warnings = await checkMaterialStock(allMateriais);
         if (warnings.length > 0) {
+          toast.success("Agendamento salvo com sucesso!");
           setStockWarnings(warnings);
           setShowStockWarning(true);
           return;
         }
       }
-      setTimeout(() => {
-        resetForm();
-        setOpen(false);
-      }, 1500);
+      toast.success("Agendamento salvo com sucesso!");
+      resetForm();
+      setOpen(false);
     } else {
       const text = await res.text();
       setSaveError(`Erro ${res.status}: ${text || res.statusText}`);
@@ -265,15 +262,7 @@ const handleSalvar = async () => {
           <DialogTitle className="text-xl font-bold">Nova Consulta</DialogTitle>
         </DialogHeader>
 
-        {saved ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <CheckCircle2 className="h-12 w-12 text-green-500" />
-            <p className="text-lg font-medium">
-              Agendamento salvo com sucesso!
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-8 py-4">
+        <div className="grid gap-8 py-4">
             {/* Bloco 1: Paciente */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative" ref={pacienteRef}>
@@ -507,8 +496,7 @@ const handleSalvar = async () => {
               </Button>
             </div>
           </div>
-        )}
-      </DialogContent>
+        </DialogContent>
     </Dialog>
       <StockWarningDialog
         open={showStockWarning}

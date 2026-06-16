@@ -34,31 +34,8 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { data: session } = await auth.getSession();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    let orgId = (session.session as any)?.activeOrganizationId;
-    const sessionId = session.session?.id;
-
-    let token = await getJwtToken(sessionId);
-    if (!token) {
-      token = "dev-mode-token";
-    }
-
-    if (!orgId) {
-      try {
-        const orgs = await getOrganizations(session.user?.id);
-        if (orgs.length > 0) orgId = orgs[0].id;
-      } catch (dbError) {
-        console.error("[agendamentos DELETE] Error fetching org:", dbError);
-      }
-    }
-
-    if (!orgId) {
-      return NextResponse.json({ error: "No active organization" }, { status: 403 });
-    }
+    const ctx = await getSessionContext();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -71,8 +48,9 @@ export async function DELETE(req: NextRequest) {
     const res = await fetch(backendUrl, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`,
-        "X-Organization-Id": orgId,
+        "X-Proxy-Secret": process.env.PROXY_SECRET || "",
+        "X-User-Id": ctx.userId,
+        "X-Organization-Id": ctx.orgId,
       },
     });
 

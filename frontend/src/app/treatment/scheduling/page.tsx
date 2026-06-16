@@ -44,7 +44,6 @@ import { format } from "date-fns/format";
 import { RefreshCcw, SlidersHorizontal, Pencil, Trash2, CheckCheck, FileText, DollarSign, Split } from "lucide-react";
 import moment from "moment";
 import { SetStateAction, useState, useEffect, useCallback } from "react";
-import type { CalendarProps } from "react-big-calendar";
 import { momentLocalizer, Views } from "react-big-calendar";
 import { NotReceptionist } from "@/components/auth/role-gate";
 
@@ -296,8 +295,8 @@ export default function SchedulingPage() {
     return professionalColors[hash % professionalColors.length];
   };
 
-  const eventPropGetter: CalendarProps<CalendarEvent>["eventPropGetter"] = (
-    e,
+  const eventPropGetter = (
+    e: any,
   ) => ({
     className: `event-variant-${e.variant ?? "primary"}`,
     style: {

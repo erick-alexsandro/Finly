@@ -2,6 +2,7 @@ package com.smilecorp.api.service;
 
 import com.smilecorp.api.dto.AgendamentoDTO;
 import com.smilecorp.api.entity.Agendamento;
+import com.smilecorp.api.entity.MaterialAgendamento;
 import com.smilecorp.api.entity.MovimentoEstoque;
 import com.smilecorp.api.entity.Paciente;
 import com.smilecorp.api.entity.ProcedimentoMaterial;
@@ -145,6 +146,7 @@ public class AgendamentoService {
     agendamento.setProfissionalId(UUID.fromString(dto.getProfissionalId()));
     agendamento.setStatus(dto.getStatus() != null ? dto.getStatus() : "agendado");
     agendamento.setProcedimentosIds(dto.getProcedimentosIds());
+    agendamento.setMateriais(dto.getMateriais());
     agendamento.setObservacoes(dto.getObservacoes());
     agendamento.setConfirmado(dto.getConfirmado() != null ? dto.getConfirmado() : false);
     agendamento.setPaciente(paciente);
@@ -153,8 +155,13 @@ public class AgendamentoService {
     Agendamento saved = agendamentoRepository.save(agendamento);
     log.info("Created appointment with ID: {}", saved.getId());
 
-    if (dto.getProcedimentosIds() != null && !dto.getProcedimentosIds().isEmpty()) {
-        deduzirMateriaisEstoque(orgId, dto.getProcedimentosIds());
+    if (dto.getMateriais() != null && !dto.getMateriais().isEmpty()) {
+        Map<Long, Integer> materiaisQuantidades = calcularMateriaisQuantidades(orgId, dto.getProcedimentosIds(), dto.getMateriais());
+        aplicarDeducaoEstoque(orgId, materiaisQuantidades, false);
+    } else if (dto.getProcedimentosIds() != null && !dto.getProcedimentosIds().isEmpty()) {
+        // fallback: calculate from procedures if no custom materials provided
+        Map<Long, Integer> materiaisQuantidades = calcularMateriaisQuantidades(orgId, dto.getProcedimentosIds(), null);
+        aplicarDeducaoEstoque(orgId, materiaisQuantidades, false);
     }
 
     return toDTO(saved);
@@ -167,11 +174,18 @@ public class AgendamentoService {
         Agendamento agendamento = agendamentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id)) 
                 .orElseThrow(() -> new IllegalArgumentException("Agendamento not found with ID: " + id));
 
+        // Capture old state for stock recalculation
+        List<String> oldProcIds = agendamento.getProcedimentosIds() != null ? agendamento.getProcedimentosIds() : new java.util.ArrayList<>();
+        List<MaterialAgendamento> oldMats = agendamento.getMateriais() != null ? agendamento.getMateriais() : new java.util.ArrayList<>();
+
         if (dto.getData() != null) agendamento.setData(dto.getData());
         if (dto.getHoraInicio() != null) agendamento.setHoraInicio(dto.getHoraInicio());
         if (dto.getHoraFim() != null) agendamento.setHoraFim(dto.getHoraFim());
         if (dto.getStatus() != null) agendamento.setStatus(dto.getStatus());
+
         if (dto.getProcedimentosIds() != null) agendamento.setProcedimentosIds(dto.getProcedimentosIds());
+        if (dto.getMateriais() != null) agendamento.setMateriais(dto.getMateriais());
+
         if (dto.getObservacoes() != null) agendamento.setObservacoes(dto.getObservacoes());
         if (dto.getConfirmado() != null) agendamento.setConfirmado(dto.getConfirmado());
 
@@ -199,6 +213,21 @@ public class AgendamentoService {
         }
 
         Agendamento updated = agendamentoRepository.save(agendamento);
+
+        // Recalculate stock if procedures or materials changed
+        List<String> newProcIds = updated.getProcedimentosIds() != null ? updated.getProcedimentosIds() : new java.util.ArrayList<>();
+        List<MaterialAgendamento> newMats = updated.getMateriais() != null ? updated.getMateriais() : new java.util.ArrayList<>();
+        boolean procChanged = !oldProcIds.equals(newProcIds);
+        boolean matChanged = !oldMats.equals(newMats);
+        if (procChanged || matChanged) {
+            Map<Long, Integer> oldQuantidades = calcularMateriaisQuantidades(orgId, oldProcIds, oldMats);
+            Map<Long, Integer> newQuantidades = calcularMateriaisQuantidades(orgId, newProcIds, newMats);
+
+            // Revert old deduction, then apply new deduction
+            aplicarDeducaoEstoque(orgId, oldQuantidades, true);
+            aplicarDeducaoEstoque(orgId, newQuantidades, false);
+        }
+
         return toDTO(updated);
     }
 
@@ -209,61 +238,87 @@ public class AgendamentoService {
         Agendamento agendamento = agendamentoRepository.findByOrganizacaoIdAndId(orgId, UUID.fromString(id))
                 .orElseThrow(() -> new IllegalArgumentException("Agendamento not found with ID: " + id));
 
+        // Revert stock before deleting
+        List<String> procIds = agendamento.getProcedimentosIds();
+        List<MaterialAgendamento> mats = agendamento.getMateriais();
+        if ((mats != null && !mats.isEmpty()) || (procIds != null && !procIds.isEmpty())) {
+            Map<Long, Integer> quantidades = calcularMateriaisQuantidades(orgId, procIds, mats);
+            aplicarDeducaoEstoque(orgId, quantidades, true);
+        }
+
         agendamentoRepository.delete(agendamento);
     }
 
-    private void deduzirMateriaisEstoque(String orgId, List<String> procedimentosIds) {
+    private Map<Long, Integer> calcularMateriaisQuantidades(String orgId, List<String> procedimentosIds, List<MaterialAgendamento> materiaisList) {
         Map<Long, Integer> materialQuantidades = new HashMap<>();
-        Map<Long, String> materialNomes = new HashMap<>();
 
-        for (String procIdStr : procedimentosIds) {
-            UUID procId;
-            try {
-                procId = UUID.fromString(procIdStr);
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid procedure ID format: {}", procIdStr);
-                continue;
+        if (materiaisList != null && !materiaisList.isEmpty()) {
+            // Use custom quantities from the appointment's material list
+            for (MaterialAgendamento m : materiaisList) {
+                if (m.getQuantidade() != null && m.getQuantidade() > 0) {
+                    materialQuantidades.merge(m.getProdutoId(), m.getQuantidade(), Integer::sum);
+                }
             }
+        } else if (procedimentosIds != null) {
+            // fallback: calculate from procedure-default materials
+            for (String procIdStr : procedimentosIds) {
+                UUID procId;
+                try {
+                    procId = UUID.fromString(procIdStr);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid procedure ID format: {}", procIdStr);
+                    continue;
+                }
 
-            List<ProcedimentoMaterial> materiais = procedimentoMaterialRepository.findByProcedimentoId(procId);
-            for (ProcedimentoMaterial pm : materiais) {
-                Long produtoId = pm.getMaterial().getId();
-                materialQuantidades.merge(produtoId, pm.getQuantidade(), Integer::sum);
-                materialNomes.putIfAbsent(produtoId, pm.getMaterial().getName());
+                List<ProcedimentoMaterial> materiais = procedimentoMaterialRepository.findByProcedimentoId(procId);
+                for (ProcedimentoMaterial pm : materiais) {
+                    materialQuantidades.merge(pm.getMaterial().getId(), pm.getQuantidade(), Integer::sum);
+                }
             }
         }
 
-        for (Map.Entry<Long, Integer> entry : materialQuantidades.entrySet()) {
+        return materialQuantidades;
+    }
+
+    private void aplicarDeducaoEstoque(String orgId, Map<Long, Integer> materiais, boolean reverter) {
+        int multiplier = reverter ? 1 : -1;
+
+        for (Map.Entry<Long, Integer> entry : materiais.entrySet()) {
             Long produtoId = entry.getKey();
-            Integer needed = entry.getValue();
+            Integer quantidade = entry.getValue();
 
             Produto produto = produtoRepository.findByOrganizacaoIdAndId(orgId, produtoId).orElse(null);
             if (produto == null) {
-                log.warn("Product {} not found for stock deduction", produtoId);
+                log.warn("Product {} not found for stock adjustment", produtoId);
                 continue;
             }
 
             Integer currentQty = produto.getCurrentQuantity() != null ? produto.getCurrentQuantity() : 0;
-            Integer newQty = currentQty - needed;
-            produto.setCurrentQuantity(newQty);
+            Integer newQty = currentQty + (quantidade * multiplier);
+            produto.setCurrentQuantity(Math.max(newQty, 0));
             produtoRepository.save(produto);
 
-            registrarMovimento(produtoId, orgId, needed, currentQty,
-                    "Consumo por agendamento - " + materialNomes.getOrDefault(produtoId, ""));
+            String tipo = reverter ? "ENTRY" : "EXIT";
+            String descricao = reverter
+                    ? "Devolução por exclusão/edição de agendamento"
+                    : "Consumo por agendamento";
+
+            registrarMovimento(produtoId, orgId, quantidade, currentQty, tipo, descricao);
         }
 
-        log.info("Stock deducted for {} materials across {} procedures",
-                materialQuantidades.size(), procedimentosIds.size());
+        log.info("Stock {} for {} materials", reverter ? "returned" : "deducted", materiais.size());
     }
 
     private void registrarMovimento(Long produtoId, String orgId, Integer quantidade,
-                                     Integer quantidadeAnterior, String descricao) {
+                                     Integer quantidadeAnterior, String tipo, String descricao) {
         MovimentoEstoque mov = new MovimentoEstoque();
         mov.setProdutoId(produtoId);
-        mov.setTipo("EXIT");
+        mov.setTipo(tipo);
         mov.setQuantidade(quantidade);
         mov.setQuantidadeAnterior(quantidadeAnterior);
-        mov.setQuantidadeNova(quantidadeAnterior - quantidade);
+        mov.setQuantidadeNova(tipo.equals("EXIT")
+                ? Math.max(quantidadeAnterior - quantidade, 0)
+                : quantidadeAnterior + quantidade);
         mov.setDescricao(descricao);
         mov.setOrganizacaoId(orgId);
         entityManager.persist(mov);
@@ -281,6 +336,7 @@ public class AgendamentoService {
                 agendamento.getProfissional() != null ? agendamento.getProfissional().getNome() : null,
                 agendamento.getStatus(),
                 agendamento.getProcedimentosIds(),
+                agendamento.getMateriais(),
                 agendamento.getObservacoes(),
                 agendamento.getConfirmado(),
                 agendamento.getCriadoEm(),

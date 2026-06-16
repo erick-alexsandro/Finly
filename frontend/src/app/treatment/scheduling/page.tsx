@@ -2,11 +2,22 @@
 
 import { NewQueryForms } from "./_components/new-query-forms";
 import { CalendarEventCard } from "./_components/calendar-event-card";
+import { PatientAppointmentEditModal } from "../patients/[id]/_components/patient-appointment-edit-modal";
+import { ProntuarioModal } from "../patients/[id]/_components/prontuario-modal";
+import { SinglePaymentModal } from "../patients/[id]/_components/single-payment-modal";
+import { InstallmentPaymentModal } from "../patients/[id]/_components/installment-payment-modal";
 import { apiFetch } from "@/lib/api";
 
 import ShadcnBigCalendar from "@/components/shadcn-big-calendar/shadcn-big-calendar";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldDescription,
@@ -30,11 +41,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { format } from "date-fns/format";
-import { RefreshCcw, SlidersHorizontal } from "lucide-react";
+import { RefreshCcw, SlidersHorizontal, Pencil, Trash2, CheckCheck, FileText, DollarSign, Split } from "lucide-react";
 import moment from "moment";
 import { SetStateAction, useState, useEffect, useCallback } from "react";
 import type { CalendarProps } from "react-big-calendar";
 import { momentLocalizer, Views } from "react-big-calendar";
+import { NotReceptionist } from "@/components/auth/role-gate";
 
 moment.locale("pt-br");
 
@@ -57,12 +69,15 @@ const localizer = momentLocalizer(moment);
 // const API_BASE = "http://localhost:8080";
 
 type CalendarEvent = {
+  id: string;
   title: string;
   patient?: string;
   procedure?: string;
+  status?: string;
   start: Date;
   end: Date;
   variant?: "primary" | "secondary" | "outline";
+  raw?: any;
 };
 
 export default function SchedulingPage() {
@@ -75,6 +90,15 @@ export default function SchedulingPage() {
   >({});
   const [reloadToken, setReloadToken] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [showEventDialog, setShowEventDialog] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showProntuarioModal, setShowProntuarioModal] = useState(false);
+  const [showPaymentChoice, setShowPaymentChoice] = useState(false);
+  const [showSinglePayment, setShowSinglePayment] = useState(false);
+  const [showInstallmentPayment, setShowInstallmentPayment] = useState(false);
 
   const defaultFilters = {
     doctor: "",
@@ -127,12 +151,15 @@ export default function SchedulingPage() {
   const datePart = item.data.split('T')[0]; // "2026-04-10"
   
   const event = {
+    id: item.id,
     title: item.profissionalNome || "Profissional não informado",
     patient: item.pacienteNome || "Sem nome",
     procedure: procedureText,
+    status: item.status,
     start: new Date(`${datePart}T${item.horaInicio}:00`),
     end: new Date(`${datePart}T${item.horaFim}:00`),
-    variant: "primary" as const,
+    variant: item.status === "confirmado" ? "secondary" as const : "primary" as const,
+    raw: item,
   };
   
   console.log("[fetchEvents] Formatted event:", {
@@ -191,6 +218,69 @@ export default function SchedulingPage() {
   const handleAgendamentoSalvo = useCallback(() => {
     setReloadToken((t) => t + 1);
   }, []);
+
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setShowEventDialog(true);
+  };
+
+  const handleEditAppointment = () => {
+    setShowEventDialog(false);
+    setShowEditModal(true);
+  };
+
+  const handleConfirmAppointment = async () => {
+    if (!selectedEvent?.raw) return;
+    try {
+      const res = await apiFetch(`/api/proxy/agendamentos?id=${selectedEvent.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "confirmado", confirmado: true, procedimentosIds: selectedEvent.raw.procedimentosIds }),
+      });
+      if (res.ok) setReloadToken((t) => t + 1);
+    } catch {}
+  };
+
+  const handleOpenProntuario = () => {
+    setShowEventDialog(false);
+    setShowProntuarioModal(true);
+  };
+
+  const handlePayment = async (payment: any) => {
+    if (!selectedEvent?.raw) return;
+    const body = {
+      nome: payment.nome,
+      data: payment.data,
+      valorTotal: payment.valorTotal,
+      formaPagamento: payment.formaPagamento,
+      parcelas: payment.parcelas,
+      pacienteId: selectedEvent.raw.pacienteId,
+      agendamentoId: selectedEvent.raw.id,
+      status: payment.status || "pendente",
+    };
+    try {
+      const res = await apiFetch("/api/proxy/pagamentos-paciente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setReloadToken((t) => t + 1);
+      }
+    } catch {}
+  };
+
+  const handleDeleteAppointment = async () => {
+    if (!selectedEvent) return;
+    try {
+      await apiFetch(`/api/proxy/agendamentos?id=${selectedEvent.id}`, {
+        method: "DELETE",
+      });
+    } catch {
+    } finally {
+      window.location.reload();
+    }
+  };
 
   const handleRefresh = () => setReloadToken((t) => t + 1);
   const handleNavigate = (d: Date) => setDate(d);
@@ -267,19 +357,18 @@ export default function SchedulingPage() {
           </Button>
 
           <Sheet>
-            <SheetTrigger>
-              <Button
-                variant="outline"
-                className="relative gap-2 cursor-pointer"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                Filtros
-                {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </Button>
+            <SheetTrigger
+              render={
+                <Button variant="outline" className="relative gap-2 cursor-pointer" />
+              }
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filtros
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold">
+                  {activeFiltersCount}
+                </span>
+              )}
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
@@ -434,10 +523,131 @@ export default function SchedulingPage() {
               events={filteredEvents}
               eventPropGetter={eventPropGetter}
               allDayAccessor={() => false}
+              onSelectEvent={handleEventClick}
             />
           )}
         </div>
       </div>
+
+      {/* Event action dialog */}
+      <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedEvent?.patient}</DialogTitle>
+            <DialogDescription>
+              {selectedEvent?.title} • {selectedEvent?.procedure}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              {moment(selectedEvent?.start).format("DD/MM/YYYY [às] HH:mm")} — {moment(selectedEvent?.end).format("HH:mm")}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <NotReceptionist>
+                <Button className="flex-1 gap-2" onClick={handleEditAppointment}>
+                  <Pencil className="h-4 w-4" /> Editar
+                </Button>
+              </NotReceptionist>
+              <Button variant="destructive" className="flex-1 gap-2" onClick={() => { setShowEventDialog(false); setShowDeleteConfirm(true); }}>
+                <Trash2 className="h-4 w-4" /> Excluir
+              </Button>
+              {selectedEvent?.raw?.status !== "confirmado" && (
+                <Button className="flex-1 gap-2" variant="outline" onClick={handleConfirmAppointment}>
+                  <CheckCheck className="h-4 w-4" /> Confirmar
+                </Button>
+              )}
+              <Button className="flex-1 gap-2" variant="outline" onClick={handleOpenProntuario}>
+                <FileText className="h-4 w-4" /> Prontuário
+              </Button>
+              <Button className="flex-1 gap-2" variant="outline" onClick={() => { setShowEventDialog(false); setShowPaymentChoice(true); }}>
+                <DollarSign className="h-4 w-4" /> Pagamento
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Excluir agendamento</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o agendamento de {selectedEvent?.patient}? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDeleteAppointment} disabled={isDeleting}>
+              {isDeleting ? "Excluindo…" : "Excluir"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit modal */}
+      <NotReceptionist>
+        {selectedEvent?.raw && (
+          <PatientAppointmentEditModal
+            open={showEditModal}
+            onOpenChange={setShowEditModal}
+            appointment={selectedEvent.raw}
+            onSuccess={() => { setReloadToken((t) => t + 1); }}
+          />
+        )}
+      </NotReceptionist>
+
+      {/* Prontuário modal */}
+      {selectedEvent?.raw && (
+        <ProntuarioModal
+          open={showProntuarioModal}
+          onOpenChange={setShowProntuarioModal}
+          agendamento={selectedEvent.raw}
+          pacienteId={selectedEvent.raw.pacienteId}
+          onSuccess={() => { setReloadToken((t) => t + 1); }}
+        />
+      )}
+
+      {/* Payment choice modal */}
+      <Dialog open={showPaymentChoice} onOpenChange={setShowPaymentChoice}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">Criar Pagamento</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {selectedEvent?.patient}
+            </p>
+            <Button onClick={() => { setShowPaymentChoice(false); setShowSinglePayment(true); }}>
+              <DollarSign className="mr-2 h-4 w-4" />
+              Pagamento Único
+            </Button>
+            <Button variant="outline" onClick={() => { setShowPaymentChoice(false); setShowInstallmentPayment(true); }}>
+              <Split className="mr-2 h-4 w-4" />
+              Pagamento Parcelado
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {selectedEvent?.raw && (
+        <SinglePaymentModal
+          open={showSinglePayment}
+          onOpenChange={setShowSinglePayment}
+          onConfirm={handlePayment}
+          defaultNome={selectedEvent.patient}
+          defaultData={new Date().toISOString().split("T")[0]}
+        />
+      )}
+      {selectedEvent?.raw && (
+        <InstallmentPaymentModal
+          open={showInstallmentPayment}
+          onOpenChange={setShowInstallmentPayment}
+          onConfirm={handlePayment}
+          defaultNome={selectedEvent.patient}
+          defaultData={new Date().toISOString().split("T")[0]}
+        />
+      )}
     </main>
   );
 }

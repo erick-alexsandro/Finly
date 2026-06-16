@@ -32,8 +32,8 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
-      <h1 className="text-4xl font-bold">Bem-vindo ao OdontoSystem</h1>
-      <p className="text-gray-500">Selecione um módulo para começar</p>
+      <h1 className="text-4xl font-bold">Bem-vindo a SmileCorp</h1>
+      <p className="text-gray-500">Entre com o seu usuário e senha para acessar a plataforma</p>
 
       <div className="flex gap-4">
         <Link href="/auth/sign-in">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from "sonner";
 import { AdminOrOwnerOnly } from '@/components/auth/role-gate';
 import { authClient } from '@/lib/auth/client';
 import { getActiveOrganizationId, ROLES, ROLE_LABELS, ROLE_OPTIONS, getRoleVariant, getRoleBadgeClass, canManageRoles, getCurrentUserRole, removeMember, updateMemberRole } from '@/lib/auth/organization';
@@ -54,8 +55,7 @@ export default function EquipePage() {
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
+const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const [changingRole, setChangingRole] = useState<{ memberId: string; loading: boolean } | null>(null);
 
@@ -120,7 +120,6 @@ export default function EquipePage() {
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail.trim() || !orgId) return;
-    setFeedback(null);
     setIsSendingInvite(true);
 
     try {
@@ -132,10 +131,10 @@ export default function EquipePage() {
       const baseUrl = window.location.origin;
       const link = `${baseUrl}/accept-invitation?id=${invite.id}`;
       setInviteLink(link);
-      setFeedback({ type: 'success', message: `Convite criado! Compartilhe o link com ${inviteEmail}.` });
+      toast.success(`Convite criado! Compartilhe o link com ${inviteEmail}.`);
       setInviteEmail('');
     } catch (e: any) {
-      setFeedback({ type: 'error', message: e.message || 'Erro ao enviar convite.' });
+      toast.error(e.message || 'Erro ao enviar convite.');
     } finally {
       setIsSendingInvite(false);
     }
@@ -144,10 +143,9 @@ export default function EquipePage() {
   const handleGenerateLink = async () => {
     if (!orgId) return;
     if (!inviteEmail.trim()) {
-      setFeedback({ type: 'error', message: 'Informe o e-mail da pessoa que receberá o convite.' });
+      toast.error('Informe o e-mail da pessoa que receberá o convite.');
       return;
     }
-    setFeedback(null);
     setIsGeneratingLink(true);
 
     try {
@@ -163,7 +161,7 @@ export default function EquipePage() {
         throw new Error('Convite criado mas ID não retornado.');
       }
     } catch (e: any) {
-      setFeedback({ type: 'error', message: e.message || 'Erro ao gerar link de convite.' });
+      toast.error(e.message || 'Erro ao gerar link de convite.');
     } finally {
       setIsGeneratingLink(false);
     }
@@ -182,9 +180,9 @@ export default function EquipePage() {
     try {
       await removeMember(orgId, memberToRemove.id);
       setMembers((prev) => prev.filter((m) => m.id !== memberToRemove.id));
-      setFeedback({ type: 'success', message: `Membro removido com sucesso.` });
+      toast.success(`Membro removido com sucesso.`);
     } catch (e: any) {
-      setFeedback({ type: 'error', message: e.message || 'Erro ao remover membro.' });
+      toast.error(e.message || 'Erro ao remover membro.');
     } finally {
       setIsRemoving(false);
       setMemberToRemove(null);
@@ -198,9 +196,9 @@ export default function EquipePage() {
     try {
       await updateMemberRole(orgId, member.id, newRole);
       setMembers((prev) => prev.map((m) => (m.id === member.id ? { ...m, role: newRole } : m)));
-      setFeedback({ type: 'success', message: `Cargo de ${member.name || member.email} alterado para ${ROLE_LABELS[newRole] ?? newRole}.` });
+      toast.success(`Cargo de ${member.name || member.email} alterado para ${ROLE_LABELS[newRole] ?? newRole}.`);
     } catch (e: any) {
-      setFeedback({ type: 'error', message: e.message || 'Erro ao alterar cargo.' });
+      toast.error(e.message || 'Erro ao alterar cargo.');
     } finally {
       setChangingRole(null);
     }
@@ -289,16 +287,6 @@ export default function EquipePage() {
           )}
         </CardContent>
       </Card>
-
-      {feedback && (
-        <div className={`rounded-md border px-4 py-3 text-sm ${
-          feedback.type === 'success'
-            ? 'border-green-300 bg-green-50 text-green-800'
-            : 'border-destructive/30 bg-destructive/10 text-destructive'
-        }`}>
-          {feedback.message}
-        </div>
-      )}
 
       <Card>
         <CardHeader>

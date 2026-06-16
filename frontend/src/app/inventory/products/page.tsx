@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { RoleGate } from "@/components/auth/role-gate";
 import { ROLES } from "@/lib/auth/organization";
 import { ProductCard } from "./components/product-card";
@@ -8,8 +8,9 @@ import { ProductModal } from "./components/product-modal";
 import { RestockModal } from "./components/restock-modal";
 import { WithdrawModal } from "./components/withdraw-modal";
 import { AdjustModal } from "./components/adjust-modal";
-import { Plus, Package, ArrowUpFromLine, Equal, ChevronDown } from "lucide-react";
+import { Plus, Package, ArrowUpFromLine, Equal } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 
 interface Product {
   id: number;
@@ -24,22 +25,10 @@ export default function InventoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filtro, setFiltro] = useState("Todos");
   const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showRestock, setShowRestock] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showAdjust, setShowAdjust] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -76,6 +65,24 @@ export default function InventoryPage() {
         <div className="text-left">
           <h1 className="text-3xl font-bold text-[#1E293B]">Estoque de Materiais</h1>
           <p className="text-slate-500">Gestão integrada de insumos clínicos</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2 cursor-pointer" onClick={() => setShowAdd(true)}>
+            <Plus className="h-4 w-4" />
+            Novo Material
+          </Button>
+          <Button variant="outline" className="gap-2 cursor-pointer" onClick={() => setShowRestock(true)}>
+            <Package className="h-4 w-4" />
+            Repor Estoque
+          </Button>
+          <Button variant="outline" className="gap-2 cursor-pointer" onClick={() => setShowWithdraw(true)}>
+            <ArrowUpFromLine className="h-4 w-4" />
+            Retirar
+          </Button>
+          <Button variant="outline" className="gap-2 cursor-pointer" onClick={() => setShowAdjust(true)}>
+            <Equal className="h-4 w-4" />
+            Ajustar
+          </Button>
         </div>
       </header>
 
@@ -118,68 +125,6 @@ export default function InventoryPage() {
           </div>
         )}
       </main>
-
-      <div ref={menuRef} className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-2">
-        {menuOpen && (
-          <div className="flex flex-col gap-1 rounded-xl bg-white shadow-xl border border-slate-200 p-1.5 min-w-[220px] animate-in fade-in slide-in-from-bottom-4 duration-150">
-            <button
-              onClick={() => { setMenuOpen(false); setShowAdd(true); }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors text-left"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-100 text-blue-700">
-                <Plus className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="font-semibold">Novo Material</p>
-                <p className="text-xs text-slate-400 font-normal">Cadastrar um item novo</p>
-              </div>
-            </button>
-            <button
-              onClick={() => { setMenuOpen(false); setShowRestock(true); }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors text-left"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-green-100 text-green-700">
-                <Package className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="font-semibold">Repor Estoque</p>
-                <p className="text-xs text-slate-400 font-normal">Adicionar quantidade a um item existente</p>
-              </div>
-            </button>
-            <button
-              onClick={() => { setMenuOpen(false); setShowWithdraw(true); }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors text-left"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-red-100 text-red-700">
-                <ArrowUpFromLine className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="font-semibold">Retirar do Estoque</p>
-                <p className="text-xs text-slate-400 font-normal">Dar baixa em itens utilizados</p>
-              </div>
-            </button>
-            <button
-              onClick={() => { setMenuOpen(false); setShowAdjust(true); }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors text-left"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-100 text-purple-700">
-                <Equal className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="font-semibold">Ajustar Estoque</p>
-                <p className="text-xs text-slate-400 font-normal">Definir quantidade exata do item</p>
-              </div>
-            </button>
-          </div>
-        )}
-
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="h-14 w-14 rounded-full bg-[#1E293B] flex items-center justify-center text-white shadow-xl hover:bg-[#0F172A] transition-all active:scale-95 outline-none"
-        >
-          {menuOpen ? <ChevronDown className="h-7 w-7" /> : <Plus className="h-7 w-7" strokeWidth={3} />}
-        </button>
-      </div>
 
       <ProductModal mode="add" open={showAdd} onOpenChange={setShowAdd} onSuccess={fetchProducts} />
       <RestockModal open={showRestock} onOpenChange={setShowRestock} onSuccess={fetchProducts} />

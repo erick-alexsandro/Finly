@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, DollarSign, Trash2, Save } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { toast } from "sonner";
 
 interface ProductModalProps {
   trigger?: React.ReactNode;
@@ -88,7 +89,7 @@ export function ProductModal({ trigger, mode, initialData, onSuccess, open, onOp
       });
 
       if (response.ok) {
-        alert(isEdit ? "Produto atualizado com sucesso!" : "Produto cadastrado com sucesso!");
+        toast.success(isEdit ? "Produto atualizado com sucesso!" : "Produto cadastrado com sucesso!");
         onSuccess?.();
         if (!isEdit) {
             setNome("");
@@ -98,11 +99,11 @@ export function ProductModal({ trigger, mode, initialData, onSuccess, open, onOp
             setMinCritico("");
         }
       } else {
-        alert("Erro na operação com o servidor.");
+        toast.error("Erro na operação com o servidor.");
       }
     } catch (error) {
       console.error("Erro de conexão:", error);
-      alert("Não foi possível conectar ao servidor.");
+      toast.error("Não foi possível conectar ao servidor.");
     } finally {
         setLoading(false);
     }
@@ -117,15 +118,15 @@ export function ProductModal({ trigger, mode, initialData, onSuccess, open, onOp
         });
 
         if (response.ok) {
-          alert("Material removido com sucesso!");
+          toast.success("Material removido com sucesso!");
           onSuccess?.();
         } else {
           const errorData = await response.json().catch(() => ({}));
-          alert(`Erro ao excluir o material (status ${response.status}): ${errorData?.details || errorData?.error || "Verifique se ele não está sendo usado."}`);
+          toast.error(`Erro ao excluir o material (status ${response.status}): ${errorData?.details || errorData?.error || "Verifique se ele não está sendo usado."}`);
         }
       } catch (error) {
         console.error("Erro de conexão ao excluir:", error);
-        alert("Erro ao conectar com o servidor.");
+        toast.error("Erro ao conectar com o servidor.");
       } finally {
         setLoading(false);
       }

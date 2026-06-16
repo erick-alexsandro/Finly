@@ -32,6 +32,62 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const { data: session } = await auth.getSession();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let orgId = (session.session as any)?.activeOrganizationId;
+    const sessionId = session.session?.id;
+
+    let token = await getJwtToken(sessionId);
+    if (!token) {
+      token = "dev-mode-token";
+    }
+
+    if (!orgId) {
+      try {
+        const orgs = await getOrganizations(session.user?.id);
+        if (orgs.length > 0) orgId = orgs[0].id;
+      } catch (dbError) {
+        console.error("[agendamentos DELETE] Error fetching org:", dbError);
+      }
+    }
+
+    if (!orgId) {
+      return NextResponse.json({ error: "No active organization" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+    }
+
+    const backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/agendamentos/${id}`;
+
+    const res = await fetch(backendUrl, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-Organization-Id": orgId,
+      },
+    });
+
+    if (res.ok || res.status === 204) {
+      return NextResponse.json({ success: true }, { status: 204 });
+    } else {
+      const errorText = await res.text();
+      return NextResponse.json({ error: "Backend error", status: res.status, details: errorText.slice(0, 500) }, { status: res.status });
+    }
+  } catch (error) {
+    console.error("[agendamentos DELETE]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ctx = await getSessionContext();

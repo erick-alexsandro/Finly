@@ -260,11 +260,12 @@ function MobileSheet({ user, clinic, onSignOut, role, navItems }: { user?: any; 
 
 function Logo() {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <div className="flex h-7 w-7 items-center justify-center">
         <Image src="/logo.svg" width={500} height={500} alt="logo" />
       </div>
       <span className="font-semibold tracking-tight">SmileCorp</span>
+      <Badge variant="secondary" className="h-4 rounded-sm px-1 py-0 text-[10px] font-semibold ml-0.5">v0.4-beta</Badge>
     </div>
   );
 }

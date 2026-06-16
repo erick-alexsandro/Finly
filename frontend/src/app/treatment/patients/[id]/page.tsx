@@ -838,7 +838,7 @@ export default function PatientProfilePage() {
                               <TableCell className="whitespace-nowrap">{r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "-"}</TableCell>
                               <TableCell className="truncate">{r.profissionalId ? profissionaisMap[String(r.profissionalId)] || r.profissionalId.slice(0, 8) + "…" : "-"}</TableCell>
                               <TableCell>{r.dente || "-"}</TableCell>
-                              <TableCell className="break-words">{r.procedimentosExecutados?.length ? r.procedimentosExecutados.map((id: string) => procedimentosMap[String(id)] || `ID ${id}`).join(", ") : "-"}</TableCell>
+                              <TableCell className="break-words">{Array.isArray(r.procedimentosExecutados) && r.procedimentosExecutados.length ? r.procedimentosExecutados.map((id: string) => procedimentosMap[String(id)] || `ID ${id}`).join(", ") : "-"}</TableCell>
                               <TableCell className="break-words">{r.conteudo || "-"}</TableCell>
                               <TableCell className="break-words">{r.secao || "-"}</TableCell>
                               <TableCell className="break-words">{r.detalhesProximaConsulta || "-"}</TableCell>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { apiFetch } from "@/lib/api";
 import {
   Dialog,
@@ -54,28 +54,14 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [todosProcedimentos, setTodosProcedimentos] = useState<any[]>([]);
-  const [todosProdutos, setTodosProdutos] = useState<any[]>([]);
   const [editouTermino, setEditouTermino] = useState(false);
 
-  // Materials for this appointment: merged from procedures then editable
-  const [materiaisAgendamento, setMateriaisAgendamento] = useState<
-    { produtoId: number; nome: string; unidade: string; quantidade: number }[]
-  >([]);
-  const [buscaMaterialExtra, setBuscaMaterialExtra] = useState("");
-  const [sugestoesMateriais, setSugestoesMateriais] = useState<any[]>([]);
-
   const profissionalRef = useRef<HTMLDivElement>(null);
-  const prevProcIdsRef = useRef<string[]>([]);
-  const loadedFromSavedRef = useRef(false);
 
   useEffect(() => {
     apiFetch("/api/proxy/procedimentos")
       .then((r) => (r.ok ? r.json() : []))
       .then(setTodosProcedimentos)
-      .catch(() => {});
-    apiFetch("/api/proxy/produtos")
-      .then((r) => (r.ok ? r.json() : []))
-      .then(setTodosProdutos)
       .catch(() => {});
   }, []);
 
@@ -98,29 +84,7 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
     } else {
       setProcedimentosSelecionados([]);
     }
-    // Load materials from saved data or compute from procedures
-    if (appointment.materiaisIds?.length) {
-      // Old format (IDs only) — compute from procedures instead
-      loadedFromSavedRef.current = false;
-      computeMateriaisFromProcedures(appointment.procedimentosIds || [], todosProcedimentos, todosProdutos);
-    } else if (appointment.materiais?.length) {
-      loadedFromSavedRef.current = true;
-      setMateriaisAgendamento(
-        appointment.materiais.map((m: any) => {
-          const prod = todosProdutos.find((p: any) => Number(p.id) === Number(m.produtoId));
-          return {
-            produtoId: Number(m.produtoId),
-            nome: prod?.name || `Material #${m.produtoId}`,
-            unidade: prod?.unit || "",
-            quantidade: Number(m.quantidade) || 1,
-          };
-        }),
-      );
-    } else {
-      loadedFromSavedRef.current = false;
-      computeMateriaisFromProcedures(appointment.procedimentosIds || [], todosProcedimentos, todosProdutos);
-    }
-  }, [open, appointment, todosProcedimentos, todosProdutos]);
+  }, [open, appointment, todosProcedimentos]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -156,59 +120,6 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
       .catch(() => setSugestoesProcedimentos([]));
   }, [buscaProcedimento]);
 
-  // Compute materials from selected procedures (merging by product)
-  const computeMateriaisFromProcedures = useCallback(
-    (procIds: string[], todosProc: any[], todosProd: any[]) => {
-      const map = new Map<number, { produtoId: number; nome: string; unidade: string; quantidade: number }>();
-      for (const p of todosProc) {
-        if (!procIds.includes(String(p.id))) continue;
-        if (p.materiais) {
-          for (const m of p.materiais) {
-            const id = Number(m.materialId);
-            if (map.has(id)) {
-              map.get(id)!.quantidade += Number(m.quantidade) || 1;
-            } else {
-              map.set(id, {
-                produtoId: id,
-                nome: m.materialNome || `Material #${id}`,
-                unidade: m.materialUnidade || "",
-                quantidade: Number(m.quantidade) || 1,
-              });
-            }
-          }
-        }
-      }
-      // If no procedures have materials, don't override existing manual entries
-      if (map.size > 0) {
-        setMateriaisAgendamento(Array.from(map.values()));
-      }
-    },
-    [],
-  );
-
-  // Recompute materials when procedures are added/removed (only if not loaded from saved data)
-  useEffect(() => {
-    if (loadedFromSavedRef.current) return;
-    const currentIds = procedimentosSelecionados.map((p) => String(p.id));
-    const prevIds = prevProcIdsRef.current;
-    if (JSON.stringify(currentIds) !== JSON.stringify(prevIds)) {
-      prevProcIdsRef.current = currentIds;
-      computeMateriaisFromProcedures(currentIds, todosProcedimentos, todosProdutos);
-    }
-  }, [procedimentosSelecionados, todosProcedimentos, todosProdutos, computeMateriaisFromProcedures]);
-
-  useEffect(() => {
-    if (!buscaMaterialExtra.trim()) {
-      setSugestoesMateriais([]);
-      return;
-    }
-    const q = buscaMaterialExtra.toLowerCase();
-    const filtrados = todosProdutos.filter(
-      (p) => p.name?.toLowerCase().includes(q) || p.id?.toString().includes(q),
-    );
-    setSugestoesMateriais(filtrados);
-  }, [buscaMaterialExtra, todosProdutos]);
-
   useEffect(() => {
     if (editouTermino || !horarioInicio || !procedimentosSelecionados.length) return;
     const total = procedimentosSelecionados.reduce((acc, p) => acc + (Number(p.duracao) || 30), 0);
@@ -229,9 +140,6 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
     setBuscaProfissional("");
     setObservacoes("");
     setProcedimentosSelecionados([]);
-    setMateriaisAgendamento([]);
-    prevProcIdsRef.current = [];
-    loadedFromSavedRef.current = false;
     setSugestoesProfissionais([]);
     setSugestoesProcedimentos([]);
     setSaveError("");
@@ -249,9 +157,6 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
         profissionalId: idProfissional?.toString(),
         profissionalNome: profissional,
         procedimentosIds: procedimentosSelecionados.map((p) => p.id.toString()),
-        materiais: materiaisAgendamento
-          .filter((m) => m.quantidade > 0)
-          .map((m) => ({ produtoId: m.produtoId, quantidade: m.quantidade })),
         observacoes,
         status: appointment.status,
       };
@@ -358,103 +263,6 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
                     ))}
                   </ul>
                 )}
-              </div>
-            </div>
-
-            <div>
-              <Label className="mb-1.5 block">Materiais</Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Quantidades calculadas dos procedimentos selecionados. Altere conforme necessário.
-              </p>
-
-              {materiaisAgendamento.length > 0 && (
-                <div className="border rounded-md divide-y mb-3">
-                  {materiaisAgendamento.map((mat, i) => (
-                    <div key={mat.produtoId} className="flex items-center gap-2 px-3 py-2">
-                      <span className="flex-1 text-sm">{mat.nome}</span>
-                      <span className="text-xs text-muted-foreground w-10">{mat.unidade}</span>
-                      <Input
-                        type="number"
-                        min={0}
-                        className="w-20 h-8 text-sm"
-                        value={mat.quantidade}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 0;
-                          setMateriaisAgendamento((prev) => {
-                            const next = [...prev];
-                            next[i] = { ...next[i], quantidade: Math.max(val, 0) };
-                            return next;
-                          });
-                        }}
-                      />
-                      <button
-                        type="button"
-                        className="text-destructive text-sm font-medium"
-                        onClick={() =>
-                          setMateriaisAgendamento((prev) =>
-                            prev.filter((_, idx) => idx !== i),
-                          )
-                        }
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {materiaisAgendamento.length === 0 && (
-                <p className="text-sm text-muted-foreground mb-2">
-                  Nenhum material associado. Adicione manualmente abaixo.
-                </p>
-              )}
-
-              <div className="flex gap-2 items-start">
-                <div className="flex-1 relative">
-                  <Input
-                    placeholder="Adicionar material extra..."
-                    value={buscaMaterialExtra}
-                    onChange={(e) => setBuscaMaterialExtra(e.target.value)}
-                    autoComplete="off"
-                  />
-                  {sugestoesMateriais.length > 0 && (
-                    <ul className="absolute z-20 mt-1 w-full rounded-md border bg-background shadow-md max-h-40 overflow-y-auto">
-                      {sugestoesMateriais.map((m) => (
-                        <li
-                          key={m.id}
-                          className="px-3 py-2 text-sm cursor-pointer hover:bg-accent"
-                          onMouseDown={() => {
-                            const existing = materiaisAgendamento.find(
-                              (x) => x.produtoId === Number(m.id),
-                            );
-                            if (existing) {
-                              setMateriaisAgendamento((prev) =>
-                                prev.map((x) =>
-                                  x.produtoId === Number(m.id)
-                                    ? { ...x, quantidade: x.quantidade + 1 }
-                                    : x,
-                                ),
-                              );
-                            } else {
-                              setMateriaisAgendamento((prev) => [
-                                ...prev,
-                                {
-                                  produtoId: Number(m.id),
-                                  nome: m.name,
-                                  unidade: m.unit || "",
-                                  quantidade: 1,
-                                },
-                              ]);
-                            }
-                            setBuscaMaterialExtra("");
-                          }}
-                        >
-                          {m.name} {m.unit ? `(${m.unit})` : ""}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
               </div>
             </div>
 

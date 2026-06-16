@@ -183,9 +183,8 @@ public class AgendamentoService {
         if (dto.getHoraFim() != null) agendamento.setHoraFim(dto.getHoraFim());
         if (dto.getStatus() != null) agendamento.setStatus(dto.getStatus());
 
-        // Always update these lists (they may be empty arrays)
-        agendamento.setProcedimentosIds(dto.getProcedimentosIds());
-        agendamento.setMateriais(dto.getMateriais());
+        if (dto.getProcedimentosIds() != null) agendamento.setProcedimentosIds(dto.getProcedimentosIds());
+        if (dto.getMateriais() != null) agendamento.setMateriais(dto.getMateriais());
 
         if (dto.getObservacoes() != null) agendamento.setObservacoes(dto.getObservacoes());
         if (dto.getConfirmado() != null) agendamento.setConfirmado(dto.getConfirmado());

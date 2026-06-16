@@ -11,6 +11,7 @@ interface CalendarEvent {
   title: string;
   patient?: string;
   procedure?: string;
+  status?: string;
   start: Date;
   end: Date;
   variant?: string;
@@ -32,6 +33,9 @@ export function CalendarEventCard({
       {event.patient && <p className="opacity-80 truncate">{event.patient}</p>}
       {event.procedure && (
         <p className="text-xs opacity-80 truncate">{event.procedure}</p>
+      )}
+      {event.status === "confirmado" && (
+        <p className="text-xs font-semibold text-green-600 truncate">✓ Confirmado</p>
       )}
     </div>
   );

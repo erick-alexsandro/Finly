@@ -29,13 +29,14 @@ export function NewQueryForms({ onSuccess }: Props) {
   // ── Form fields ────────────────────────────────────────────────────────────
   const [idPaciente, setIdPaciente] = useState<number | null>(null);
   const [nomePaciente, setNomePaciente] = useState("");
-  const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
   const [dataConsulta, setDataConsulta] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [previsaoTermino, setPrevisaoTermino] = useState("");
   const [idProfissional, setIdProfissional] = useState<number | null>(null);
   const [profissional, setProfissional] = useState("");
+  const [editouTermino, setEditouTermino] = useState(false);
   const [observacoes, setObservacoes] = useState("");
   const [procedimentosSelecionados, setProcedimentosSelecionados] = useState<
     any[]
@@ -83,7 +84,7 @@ export function NewQueryForms({ onSuccess }: Props) {
     setIdPaciente(null);
     setNomePaciente("");
     setBuscaPaciente("");
-    setEmail("");
+    setCpf("");
     setTelefone("");
     setDataConsulta("");
     setHorarioInicio("");
@@ -93,6 +94,7 @@ export function NewQueryForms({ onSuccess }: Props) {
     setBuscaProfissional("");
     setObservacoes("");
     setProcedimentosSelecionados([]);
+    setEditouTermino(false);
     setSugestoesPacientes([]);
     setSugestoesProfissionais([]);
     setSugestoesProcedimentos([]);
@@ -151,6 +153,7 @@ export function NewQueryForms({ onSuccess }: Props) {
 
   // ── Auto-calculate end time ───────────────────────────────────────────────
   useEffect(() => {
+    if (editouTermino) return;
     if (!horarioInicio || !procedimentosSelecionados.length) {
       setPrevisaoTermino("");
       return;
@@ -165,7 +168,7 @@ export function NewQueryForms({ onSuccess }: Props) {
     setPrevisaoTermino(
       `${String(Math.floor(end / 60) % 24).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`,
     );
-  }, [procedimentosSelecionados, horarioInicio]);
+  }, [procedimentosSelecionados, horarioInicio, editouTermino]);
 
   const maskPhone = (v: string) =>
     v
@@ -187,7 +190,7 @@ const handleSalvar = async () => {
     const payload = {
       pacienteId: idPaciente?.toString(), // Convert to string as DTO expects String
       pacienteNome: nomePaciente,
-      email: email,                       // ← NEW: Send email for auto-create
+      cpf: cpf,
       telefone: telefone,                 // ← NEW: Send phone for auto-create
       profissionalId: idProfissional?.toString(), // Convert to string
       profissionalNome: profissional,
@@ -253,9 +256,12 @@ const handleSalvar = async () => {
         if (!v) resetForm();
       }}
     >
-      <DialogTrigger>
-        <Button>Agendar Nova Consulta</Button>
+      <DialogTrigger
+        render={<Button />}
+      >
+        Agendar Nova Consulta
       </DialogTrigger>
+
 
       <DialogContent className="sm:max-w-[80vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -295,7 +301,7 @@ const handleSalvar = async () => {
                         onMouseDown={() => {
                           setNomePaciente(p.nome);
                           setBuscaPaciente(p.nome);
-                          setEmail(p.email || "");
+                          setCpf(p.cpf || "");
                           setTelefone(maskPhone(p.telefone || ""));
                           setIdPaciente(p.id);
                           setShowSugestoesPacientes(false);
@@ -314,15 +320,14 @@ const handleSalvar = async () => {
               </div>
 
               <div className="flex-1">
-                <Label htmlFor="email" className="mb-1.5 block">
-                  E-mail
+                <Label htmlFor="cpf" className="mb-1.5 block">
+                  CPF
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@exemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={(e) => setCpf(e.target.value)}
                 />
               </div>
 
@@ -372,8 +377,7 @@ const handleSalvar = async () => {
                   id="termino"
                   type="time"
                   value={previsaoTermino}
-                  readOnly
-                  className="bg-muted cursor-default"
+                  onChange={(e) => { setPrevisaoTermino(e.target.value); setEditouTermino(true); }}
                 />
               </div>
             </div>

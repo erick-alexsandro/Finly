@@ -1,5 +1,6 @@
 package com.smilecorp.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,6 +11,7 @@ public class ProntuarioDTO {
     private UUID agendamentoId;
     private UUID pacienteId;
     private String conteudo;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate data;
     private UUID profissionalId;
     private String dente;

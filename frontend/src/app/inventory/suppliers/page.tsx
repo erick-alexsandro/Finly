@@ -6,7 +6,8 @@ import { ROLES } from "@/lib/auth/organization";
 import { SupplierModal } from "./_components/supplier-modal";
 import { SupplierTable } from "./_components/supplier-table";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Plus, Search } from "lucide-react";
 
 interface Supplier {
   id: string;
@@ -80,7 +81,16 @@ export default function SuppliersPage() {
           <h1 className="text-3xl font-bold text-[#1E293B]">Fornecedores</h1>
           <p className="text-slate-500">Gestão de fornecedores e contratos</p>
         </div>
-        <SupplierModal mode="add" onSuccess={fetchSuppliers} />
+        <SupplierModal
+          mode="add"
+          onSuccess={fetchSuppliers}
+          trigger={
+            <Button variant="outline" className="gap-2 cursor-pointer">
+              <Plus className="h-4 w-4" />
+              Novo Fornecedor
+            </Button>
+          }
+        />
       </header>
 
       <div className="max-w-7xl mx-auto space-y-6">

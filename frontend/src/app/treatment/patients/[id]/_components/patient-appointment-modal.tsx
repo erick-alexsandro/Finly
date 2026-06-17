@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, CalendarPlus } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
+import { toast } from "sonner";
 
 interface PatientData {
   id: string;
@@ -54,7 +55,6 @@ export function PatientAppointmentModal({ open, onOpenChange, patient, onSuccess
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [saved, setSaved] = useState(false);
   const [editouTermino, setEditouTermino] = useState(false);
 
   const profissionalRef = useRef<HTMLDivElement>(null);
@@ -127,7 +127,6 @@ export function PatientAppointmentModal({ open, onOpenChange, patient, onSuccess
     setSugestoesProfissionais([]);
     setSugestoesProcedimentos([]);
     setSaveError("");
-    setSaved(false);
     setEditouTermino(false);
   };
 
@@ -159,12 +158,10 @@ export function PatientAppointmentModal({ open, onOpenChange, patient, onSuccess
       });
 
       if (res.ok) {
-        setSaved(true);
         onSuccess?.();
-        setTimeout(() => {
-          resetForm();
-          onOpenChange(false);
-        }, 1500);
+        toast.success("Agendamento salvo com sucesso!");
+        resetForm();
+        onOpenChange(false);
       } else {
         const text = await res.text();
         setSaveError(`Erro ${res.status}: ${text || res.statusText}`);
@@ -195,13 +192,7 @@ export function PatientAppointmentModal({ open, onOpenChange, patient, onSuccess
           <DialogTitle className="text-xl font-bold">Novo Agendamento</DialogTitle>
         </DialogHeader>
 
-        {saved ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <CheckCircle2 className="h-12 w-12 text-green-500" />
-            <p className="text-lg font-medium">Agendamento salvo com sucesso!</p>
-          </div>
-        ) : (
-          <div className="grid gap-8 py-4">
+        <div className="grid gap-8 py-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1">
                 <Label className="mb-1.5 block">Paciente</Label>
@@ -332,8 +323,7 @@ export function PatientAppointmentModal({ open, onOpenChange, patient, onSuccess
               </Button>
             </div>
           </div>
-        )}
-      </DialogContent>
+        </DialogContent>
     </Dialog>
   );
 }

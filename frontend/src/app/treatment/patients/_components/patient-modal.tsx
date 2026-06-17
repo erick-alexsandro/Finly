@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 interface PatientModalProps {
   open: boolean;
@@ -42,7 +43,6 @@ export function PatientModal({ open, onOpenChange, onSuccess }: PatientModalProp
   const [telefone, setTelefone] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [saved, setSaved] = useState(false);
 
   const cpfDigits = cpf.replace(/\D/g, "");
 
@@ -52,7 +52,6 @@ export function PatientModal({ open, onOpenChange, onSuccess }: PatientModalProp
     setDataNascimento("");
     setTelefone("");
     setSaveError("");
-    setSaved(false);
   };
 
   const handleSalvar = async () => {
@@ -90,12 +89,10 @@ export function PatientModal({ open, onOpenChange, onSuccess }: PatientModalProp
       });
 
       if (createRes.ok) {
-        setSaved(true);
         onSuccess?.();
-        setTimeout(() => {
-          resetForm();
-          onOpenChange(false);
-        }, 1500);
+        toast.success("Paciente cadastrado com sucesso!");
+        resetForm();
+        onOpenChange(false);
       } else {
         const text = await createRes.text();
         setSaveError(`Erro ${createRes.status}: ${text || createRes.statusText}`);
@@ -125,13 +122,7 @@ export function PatientModal({ open, onOpenChange, onSuccess }: PatientModalProp
           <DialogTitle className="text-xl font-bold">Novo Paciente</DialogTitle>
         </DialogHeader>
 
-        {saved ? (
-          <div className="flex flex-col items-center justify-center py-8 gap-3">
-            <CheckCircle2 className="h-12 w-12 text-green-500" />
-            <p className="text-lg font-medium">Paciente cadastrado</p>
-          </div>
-        ) : (
-          <div className="grid gap-5 py-2">
+        <div className="grid gap-5 py-2">
             <div className="grid gap-2">
               <Label htmlFor="nome">
                 Nome <span className="text-destructive">*</span>
@@ -195,8 +186,7 @@ export function PatientModal({ open, onOpenChange, onSuccess }: PatientModalProp
               </Button>
             </div>
           </div>
-        )}
-      </DialogContent>
+        </DialogContent>
     </Dialog>
   );
 }

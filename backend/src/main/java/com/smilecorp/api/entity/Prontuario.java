@@ -1,7 +1,11 @@
 package com.smilecorp.api.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -30,8 +34,9 @@ public class Prontuario extends BaseEntity {
     @Column(name = "dente", length = 50)
     private String dente;
 
-    @Column(name = "procedimentos_executados", columnDefinition = "TEXT")
-    private String procedimentosExecutados;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "procedimentos_executados", columnDefinition = "jsonb")
+    private List<String> procedimentosExecutados = new ArrayList<>();
 
     @Column(name = "secao", length = 100)
     private String secao;
@@ -57,8 +62,8 @@ public class Prontuario extends BaseEntity {
     public void setProfissionalId(UUID profissionalId) { this.profissionalId = profissionalId; }
     public String getDente() { return dente; }
     public void setDente(String dente) { this.dente = dente; }
-    public String getProcedimentosExecutados() { return procedimentosExecutados; }
-    public void setProcedimentosExecutados(String procedimentosExecutados) { this.procedimentosExecutados = procedimentosExecutados; }
+    public List<String> getProcedimentosExecutados() { return procedimentosExecutados; }
+    public void setProcedimentosExecutados(List<String> procedimentosExecutados) { this.procedimentosExecutados = procedimentosExecutados; }
     public String getSecao() { return secao; }
     public void setSecao(String secao) { this.secao = secao; }
     public String getDetalhesProximaConsulta() { return detalhesProximaConsulta; }

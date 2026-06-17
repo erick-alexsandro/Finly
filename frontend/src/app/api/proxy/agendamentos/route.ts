@@ -32,6 +32,40 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const ctx = await getSessionContext();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+    }
+
+    const backendUrl = `${process.env.BACKEND_URL || "http://localhost:8080"}/api/agendamentos/${id}`;
+
+    const res = await fetch(backendUrl, {
+      method: "DELETE",
+      headers: {
+        "X-Proxy-Secret": process.env.PROXY_SECRET || "",
+        "X-User-Id": ctx.userId,
+        "X-Organization-Id": ctx.orgId,
+      },
+    });
+
+    if (res.ok || res.status === 204) {
+      return NextResponse.json({ success: true }, { status: 204 });
+    } else {
+      const errorText = await res.text();
+      return NextResponse.json({ error: "Backend error", status: res.status, details: errorText.slice(0, 500) }, { status: res.status });
+    }
+  } catch (error) {
+    console.error("[agendamentos DELETE]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ctx = await getSessionContext();

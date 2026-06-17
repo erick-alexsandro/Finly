@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface AppointmentData {
   id: string;
@@ -22,6 +22,8 @@ interface AppointmentData {
   profissionalId: string;
   profissionalNome: string;
   procedimentosIds: string[];
+  materiaisIds?: number[];
+  materiais?: { produtoId: number; quantidade: number }[];
   observacoes: string;
   status: string;
 }
@@ -51,7 +53,6 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [saved, setSaved] = useState(false);
   const [todosProcedimentos, setTodosProcedimentos] = useState<any[]>([]);
   const [editouTermino, setEditouTermino] = useState(false);
 
@@ -142,7 +143,6 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
     setSugestoesProfissionais([]);
     setSugestoesProcedimentos([]);
     setSaveError("");
-    setSaved(false);
   };
 
   const handleSalvar = async () => {
@@ -168,12 +168,10 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
       });
 
       if (res.ok) {
-        setSaved(true);
         onSuccess?.();
-        setTimeout(() => {
-          resetForm();
-          onOpenChange(false);
-        }, 1500);
+        toast.success("Agendamento atualizado com sucesso!");
+        resetForm();
+        onOpenChange(false);
       } else {
         const text = await res.text();
         setSaveError(`Erro ${res.status}: ${text || res.statusText}`);
@@ -195,13 +193,7 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
           <DialogTitle className="text-xl font-bold">Editar Agendamento</DialogTitle>
         </DialogHeader>
 
-        {saved ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <CheckCircle2 className="h-12 w-12 text-green-500" />
-            <p className="text-lg font-medium">Agendamento atualizado com sucesso!</p>
-          </div>
-        ) : (
-          <div className="grid gap-8 py-4">
+        <div className="grid gap-8 py-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1">
                 <Label className="mb-1.5 block">Data *</Label>
@@ -287,8 +279,7 @@ export function PatientAppointmentEditModal({ open, onOpenChange, appointment, o
               </Button>
             </div>
           </div>
-        )}
-      </DialogContent>
+        </DialogContent>
     </Dialog>
   );
 }

@@ -1,7 +1,9 @@
 package com.smilecorp.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class ProntuarioDTO {
@@ -9,10 +11,11 @@ public class ProntuarioDTO {
     private UUID agendamentoId;
     private UUID pacienteId;
     private String conteudo;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate data;
     private UUID profissionalId;
     private String dente;
-    private String procedimentosExecutados;
+    private List<String> procedimentosExecutados;
     private String secao;
     private String detalhesProximaConsulta;
     private String observacoes;
@@ -23,7 +26,7 @@ public class ProntuarioDTO {
 
     public ProntuarioDTO(UUID id, UUID agendamentoId, UUID pacienteId, String conteudo,
                         LocalDate data, UUID profissionalId, String dente,
-                        String procedimentosExecutados, String secao,
+                        List<String> procedimentosExecutados, String secao,
                         String detalhesProximaConsulta, String observacoes,
                         LocalDateTime criadoEm, LocalDateTime atualizadoEm) {
         this.id = id; this.agendamentoId = agendamentoId; this.pacienteId = pacienteId;
@@ -48,8 +51,8 @@ public class ProntuarioDTO {
     public void setProfissionalId(UUID profissionalId) { this.profissionalId = profissionalId; }
     public String getDente() { return dente; }
     public void setDente(String dente) { this.dente = dente; }
-    public String getProcedimentosExecutados() { return procedimentosExecutados; }
-    public void setProcedimentosExecutados(String procedimentosExecutados) { this.procedimentosExecutados = procedimentosExecutados; }
+    public List<String> getProcedimentosExecutados() { return procedimentosExecutados; }
+    public void setProcedimentosExecutados(List<String> procedimentosExecutados) { this.procedimentosExecutados = procedimentosExecutados; }
     public String getSecao() { return secao; }
     public void setSecao(String secao) { this.secao = secao; }
     public String getDetalhesProximaConsulta() { return detalhesProximaConsulta; }
